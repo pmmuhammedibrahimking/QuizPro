@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Question Bank - QuizPro Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/storage.js"></script>
+    <script src="js/questions.js"></script> <!-- Need default questions for storage fallback -->
+    <script src="js/admin.js"></script>
+    <script>
+        // Immediately protect route
+        AdminAuth.protectRoute();
+    </script>
+    <style>
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: var(--bg-color); border-radius: 8px; padding: 2rem;
+            width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+        .action-btn { padding: 5px 10px; font-size: 0.9rem; margin-right: 5px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body><div class="global-loader" id="loader"><div class="spinner"></div></div>
+    <header class="animate-fade-in container">
+        <a href="admin-dashboard.html" class="logo" style="color: var(--danger-color)">🛡️ QuizPro Admin</a>
+        <nav>
+            <a href="admin-dashboard.html" class="btn btn-secondary">Dashboard</a>
+            <button id="admin-logout-btn" class="btn btn-primary" style="background-color: var(--danger-color);">Logout</button>
+            <button id="theme-btn" class="theme-toggle" style="margin-left: 10px;" aria-label="Toggle Dark Theme">🌙</button>
+        </nav>
+    </header>
+
+    <main class="container animate-fade-in">
+        <div class="flex-between" style="margin-bottom: 2rem;">
+            <h2>Question Bank Manager</h2>
+            <button id="add-q-btn" class="btn btn-primary">➕ Add Question</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="card" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end;">
+            <div style="flex: 1;">
+                <label class="form-label">Search Questions</label>
+                <input type="text" id="search-input" class="form-control" placeholder="Search by keywords...">
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label">Filter by Category</label>
+                <select id="category-filter" class="form-control">
+                    <option value="All">All Categories</option>
+                    <option value="HTML">HTML</option>
+                    <option value="CSS">CSS</option>
+                    <option value="JavaScript">JavaScript</option>
+                    <option value="ComputerFundamentals">Computer Fundamentals</option>
+                    <option value="Aptitude">Aptitude</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card" style="padding: 0; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead style="background-color: rgba(0,0,0,0.05);">
+                    <tr>
+                        <th style="padding: 1rem; border-bottom: 2px solid var(--border-color);">Category</th>
+                        <th style="padding: 1rem; border-bottom: 2px solid var(--border-color); width: 40%;">Question</th>
+                        <th style="padding: 1rem; border-bottom: 2px solid var(--border-color);">Correct Answer</th>
+                        <th style="padding: 1rem; border-bottom: 2px solid var(--border-color); text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="questions-tbody">
+                    <!-- Dynamic rows -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Add/Edit Modal -->
+    <div id="q-modal" class="modal">
+        <div class="modal-content animate-fade-in">
+            <h3 id="modal-title" style="margin-bottom: 1.5rem;">Add Question</h3>
+            <form id="q-form">
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="edit-original-cat">
+                
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="modal-category" class="form-control" required>
+                        <option value="HTML">HTML</option>
+                        <option value="CSS">CSS</option>
+                        <option value="JavaScript">JavaScript</option>
+                        <option value="ComputerFundamentals">Computer Fundamentals</option>
+                        <option value="Aptitude">Aptitude</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Question Text</label>
+                    <textarea id="modal-q" class="form-control" rows="3" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Option 1</label>
+                    <input type="text" id="modal-opt0" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Option 2</label>
+                    <input type="text" id="modal-opt1" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Option 3</label>
+                    <input type="text" id="modal-opt2" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Option 4</label>
+                    <input type="text" id="modal-opt3" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Correct Option Index (0 to 3)</label>
+                    <select id="modal-answer" class="form-control" required>
+                        <option value="0">Option 1</option>
+                        <option value="1">Option 2</option>
+                        <option value="2">Option 3</option>
+                        <option value="3">Option 4</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Explanation</label>
+                    <textarea id="modal-exp" class="form-control" rows="2" required></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="button" id="close-modal" class="btn btn-secondary btn-block">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-block">Save Question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/admin-questions.js"></script>
+<script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
+</body>
+</html>

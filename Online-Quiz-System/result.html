@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Result - QuizPro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/result.css">
+</head>
+
+<body>
+    <div class="global-loader" id="loader">
+        <div class="spinner"></div>
+    </div>
+    <header class="animate-fade-in container">
+        <a href="index.html" class="logo">🎓 QuizPro</a>
+        <nav style="display: flex; gap: 0.5rem; align-items: center;">
+            <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+        </nav>
+    </header>
+
+    <main class="container animate-fade-in">
+        <div class="card" id="result-card">
+            <div class="result-header">
+                <h2>Quiz Completed!</h2>
+                <div id="grade-badge" class="grade-badge">A+</div>
+                <h3 id="score-text">You scored 10 out of 10</h3>
+                <p id="percentage-text" style="font-weight: bold;">(100%)</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div id="correct-answers" class="stat-value">0</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+                <div class="stat-card">
+                    <div id="wrong-answers" class="stat-value">0</div>
+                    <div class="stat-label">Wrong</div>
+                </div>
+                <div class="stat-card">
+                    <div id="unanswered" class="stat-value">0</div>
+                    <div class="stat-label">Unanswered</div>
+                </div>
+                <div class="stat-card">
+                    <div id="time-taken" class="stat-value">0s</div>
+                    <div class="stat-label">Total Time</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem;">
+                <a href="review.html" class="btn btn-secondary">Review Answers</a>
+                <button id="print-btn" class="btn btn-primary" style="display: none;">Print Certificate</button>
+            </div>
+        </div>
+
+        <div id="certificate-container" style="display: none;" class="animate-pop-in">
+            <div class="certificate">
+                <h1>Certificate of Completion</h1>
+                <h3>This is to certify that</h3>
+                <div id="cert-name" class="name">Student Name</div>
+                <p>has successfully completed the <strong id="cert-category">HTML5</strong> assessment.</p>
+                <p style="margin-top: 1rem;">
+                    Score: <strong id="cert-score">100%</strong> | Grade: <strong id="cert-grade">A+</strong>
+                </p>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 3rem;">
+                    <p style="font-size: 0.9rem; color: #777; text-align: left;">Issued on: <br><strong id="cert-date"
+                            style="color: #333;">Date</strong></p>
+                    <div style="text-align: center;">
+                        <div
+                            style="font-family: 'Brush Script MT', cursive; font-size: 2.5rem; color: var(--primary-color); border-bottom: 2px solid #ccc; padding-bottom: 0px; margin-bottom: 5px; line-height: 1; min-width: 150px;">
+                            QuizPro Admin</div>
+                        <p style="font-size: 0.8rem; color: #777; margin: 0; text-transform: uppercase;">Authorized
+                            Signature</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/storage.js"></script>
+    <script src="js/result.js"></script>
+    <script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
+</body>
+
+</html>

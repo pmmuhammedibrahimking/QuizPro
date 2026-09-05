@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz in Progress - QuizPro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/quiz.css">
+</head>
+<body><div class="global-loader" id="loader"><div class="spinner"></div></div>
+    <header class="animate-fade-in container">
+        <a href="#" class="logo">🎓 QuizPro</a>
+        <nav style="display: flex; gap: 0.5rem; align-items: center;">
+            <span id="user-display" style="font-weight: 500;"></span>
+        </nav>
+    </header>
+
+    <main class="container animate-fade-in">
+        <div class="card">
+            <div class="quiz-header">
+                <div class="quiz-info">
+                    <span id="category-display">Category</span>
+                    <span id="difficulty-display">Difficulty</span>
+                    <span id="question-count">Question: 1/10</span>
+                </div>
+                <div class="timer-box">
+                    ⏱️ <span id="time-left">30</span>s
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+
+            <div id="quiz-content">
+                <h3 id="question-text" class="question-text">Loading question...</h3>
+                <div id="options-container" class="options-container">
+                    <!-- Options will be injected here by JS -->
+                </div>
+            </div>
+
+            <div class="quiz-footer" style="display: flex; justify-content: space-between; margin-top: 1rem; width: 100%;">
+                <button id="prev-btn" class="btn btn-secondary" style="visibility: hidden;">Previous</button>
+                <div style="display: flex; gap: 1rem;">
+                    <button id="skip-btn" class="btn btn-secondary">Skip</button>
+                    <button id="next-btn" class="btn btn-primary" style="display: none;">Next Question</button>
+                    <button id="finish-btn" class="btn btn-primary" style="display: none;">Finish Quiz</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/storage.js"></script>
+    <script src="js/questions.js"></script>
+    <script src="js/timer.js"></script>
+    <script src="js/quiz.js"></script>
+<script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
+</body>
+</html>

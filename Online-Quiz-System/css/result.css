@@ -1,0 +1,163 @@
+.result-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.grade-badge {
+    display: inline-block;
+    padding: 1rem 2rem;
+    border-radius: 50%;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 1rem 0;
+    color: white;
+    box-shadow: var(--shadow);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background-color: var(--bg-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Certificate Styles */
+@keyframes borderGlow {
+    0% {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+    }
+
+    50% {
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 30px rgba(236, 72, 153, 0.6);
+    }
+
+    100% {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+    }
+}
+
+.certificate {
+    border: 10px solid var(--primary-color);
+    padding: 3rem;
+    text-align: center;
+    background-color: #fff;
+    color: #111;
+    margin-top: 2rem;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    animation: borderGlow 4s infinite alternate;
+}
+
+.certificate::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    border: 2px solid var(--primary-color);
+}
+
+.certificate h1 {
+    font-family: serif;
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.certificate h3 {
+    font-family: sans-serif;
+    color: #555;
+}
+
+.certificate .name {
+    font-size: 2.5rem;
+    font-weight: bold;
+    font-family: serif;
+    margin: 2rem 0;
+    text-decoration: underline;
+}
+
+.certificate p {
+    font-size: 1.2rem;
+    color: #333;
+}
+
+/* Review Styles */
+.review-item {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    border-left: 5px solid var(--border-color);
+}
+
+.review-item.correct {
+    border-left-color: var(--success-color);
+}
+
+.review-item.wrong {
+    border-left-color: var(--danger-color);
+}
+
+.review-question {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.review-answer {
+    margin-bottom: 0.5rem;
+}
+
+.review-explanation {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    #certificate-container,
+    #certificate-container * {
+        visibility: visible;
+    }
+
+    #certificate-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+}

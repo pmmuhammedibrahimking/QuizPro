@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - QuizPro</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body><div class="global-loader" id="loader"><div class="spinner"></div></div>
+    <header class="animate-fade-in container">
+        <a href="index.html" class="logo">🎓 QuizPro</a>
+        <nav style="display: flex; gap: 0.5rem; align-items: center;">
+            <a href="index.html" class="btn btn-secondary">Home</a>
+            <a href="leaderboard.html" class="btn btn-secondary">Leaderboard</a>
+        </nav>
+    </header>
+
+    <main class="container animate-fade-in">
+        <div class="card">
+            <h2 style="margin-bottom: 2rem;">User Dashboard</h2>
+            <div id="user-info" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-color); border-radius: 8px;">
+                <!-- User info injected here -->
+            </div>
+
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="stat-card animate-pop-in delay-100">
+                    <div id="total-attempts" style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">0</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px;">Total Attempts</div>
+                </div>
+                <div class="stat-card animate-pop-in delay-200">
+                    <div id="highest-score" style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">0</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px;">Highest Score</div>
+                </div>
+                <div class="stat-card animate-pop-in delay-300">
+                    <div id="avg-score" style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">0</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px;">Avg Score</div>
+                </div>
+                <div class="stat-card animate-pop-in delay-400">
+                    <div id="best-category" style="font-size: 1.2rem; font-weight: 700; color: var(--primary-color); height: 38px; line-height: 38px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="Best Category">-</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px;">Best Category</div>
+                </div>
+                <div class="stat-card animate-pop-in delay-500">
+                    <div id="certs-earned" style="font-size: 2rem; font-weight: 700; color: var(--success-color);">0</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px;">Certificates</div>
+                </div>
+            </div>
+
+            <h3>Recent Attempts</h3>
+            <div id="history-container" style="margin-top: 1rem;">
+                <!-- History items injected here -->
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+                <a href="instructions.html" class="btn btn-primary">Take New Quiz</a>
+                <button id="delete-account-btn" class="btn btn-secondary" style="color: var(--danger-color); border-color: var(--danger-color);">Delete My Profile</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/storage.js"></script>
+    <script src="js/dashboard.js"></script>
+<script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
+</body>
+</html>

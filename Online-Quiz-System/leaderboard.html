@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - QuizPro</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body><div class="global-loader" id="loader"><div class="spinner"></div></div>
+    <header class="animate-fade-in container">
+        <a href="index.html" class="logo">🎓 QuizPro</a>
+        <nav style="display: flex; gap: 0.5rem; align-items: center;">
+            <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+            <a href="index.html" class="btn btn-secondary">Home</a>
+        </nav>
+    </header>
+
+    <main class="container animate-fade-in">
+        <div class="card">
+            <h2 style="margin-bottom: 2rem; text-align: center;">Global Leaderboard 🏆</h2>
+            
+            <div style="margin-bottom: 1rem; text-align: right;">
+                <button id="reset-leaderboard" class="btn btn-secondary" style="color: var(--danger-color); border-color: var(--danger-color);">Reset Leaderboard</button>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem;">Rank</th>
+                        <th style="padding: 1rem;">Name</th>
+                        <th style="padding: 1rem;">Category</th>
+                        <th style="padding: 1rem;">Score</th>
+                        <th style="padding: 1rem;">Date</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <!-- Leaderboard items injected here -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="js/storage.js"></script>
+    <script src="js/leaderboard.js"></script>
+<script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
+</body>
+</html>

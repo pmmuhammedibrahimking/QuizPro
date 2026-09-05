@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - QuizPro</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body><div class="global-loader" id="loader"><div class="spinner"></div></div>
+    <header class="animate-fade-in container">
+        <a href="index.html" class="logo">🎓 QuizPro</a>
+        <nav style="display: flex; gap: 0.5rem; align-items: center;">
+            <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+            <a href="index.html" class="btn btn-secondary">Home</a>
+        </nav>
+    </header>
+
+    <main class="container animate-fade-in">
+        <div class="card" style="max-width: 500px; margin: 0 auto;">
+            <h2 style="margin-bottom: 2rem; text-align: center;">Preferences ⚙️</h2>
+            
+            <div class="form-group settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-color); border-radius: 8px; border: 2px solid var(--border-color);">
+                <label class="form-label" style="margin: 0; font-weight: 500; cursor: pointer;" for="setting-theme">Dark Mode</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="setting-theme">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="form-group settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-color); border-radius: 8px; border: 2px solid var(--border-color); margin-top: 1rem;">
+                <label class="form-label" style="margin: 0; font-weight: 500; cursor: pointer;" for="setting-sound">Sound Effects</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="setting-sound">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="form-group settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-color); border-radius: 8px; border: 2px solid var(--border-color); margin-top: 1rem;">
+                <label class="form-label" style="margin: 0; font-weight: 500; cursor: pointer;" for="setting-timer">Enable Timer (30s)</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="setting-timer">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div style="margin-top: 2rem; text-align: center;">
+                <button id="save-settings" class="btn btn-primary btn-block">Save Settings</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/storage.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const settings = StorageHelper.getSettings();
+            
+            document.getElementById('setting-theme').checked = settings.theme === 'dark';
+            document.getElementById('setting-sound').checked = settings.sound;
+            document.getElementById('setting-timer').checked = settings.timer;
+
+            document.getElementById('save-settings').addEventListener('click', () => {
+                const newSettings = {
+                    theme: document.getElementById('setting-theme').checked ? 'dark' : 'light',
+                    sound: document.getElementById('setting-sound').checked,
+                    timer: document.getElementById('setting-timer').checked
+                };
+                
+                StorageHelper.saveSettings(newSettings);
+                StorageHelper.applyTheme();
+                
+                const btn = document.getElementById('save-settings');
+                btn.textContent = 'Saved! ✓';
+                btn.style.backgroundColor = 'var(--success-color)';
+                setTimeout(() => {
+                    btn.textContent = 'Save Settings';
+                    btn.style.backgroundColor = 'var(--primary-color)';
+                }, 2000);
+            });
+        });
+    </script>
+<script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
+</body>
+</html>

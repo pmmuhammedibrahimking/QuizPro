@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Quiz & Examination System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+
+<body>
+    <div class="global-loader" id="loader">
+        <div class="spinner"></div>
+    </div>
+    <header class="animate-fade-in container">
+        <a href="index.html" class="logo">🎓 QuizPro</a>
+        <nav style="display: flex; gap: 0.5rem; align-items: center;">
+            <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+            <a href="leaderboard.html" class="btn btn-secondary">Leaderboard</a>
+            <a href="settings.html" class="nav-icon-btn" title="Settings">⚙️</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero animate-fade-in" style="animation-delay: 0.1s;">
+            <div class="hero-content">
+                <h1 class="hero-title">Master Your Skills with <span style="color: var(--primary-color)">QuizPro</span>
+                </h1>
+                <p class="hero-subtitle">The ultimate online examination platform designed for students and
+                    professionals to test and improve their technical knowledge.</p>
+                <div class="hero-buttons">
+                    <a href="#registration" class="btn btn-primary btn-large">Start Your Quiz Now</a>
+                    <a href="#about" class="btn btn-secondary btn-large">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div style="font-size: 8rem; text-shadow: var(--shadow-hover);">🚀</div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features section animate-fade-in" style="animation-delay: 0.2s;">
+            <h2 class="section-title">Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⏱️</div>
+                    <h3>Timed Assessments</h3>
+                    <p>Experience real exam pressure with 30-second timers per question to sharpen your quick-thinking
+                        skills.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Detailed Analytics</h3>
+                    <p>Track your performance over time with a comprehensive dashboard showing your scores and history.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📜</div>
+                    <h3>Verified Certificates</h3>
+                    <p>Earn a personalized certificate upon successful completion that you can print and share.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Registration Section -->
+        <section id="registration" class="registration-section section animate-fade-in" style="animation-delay: 0.3s;">
+            <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <h2 style="text-align: center;">Enter Details to Begin</h2>
+                <form id="user-form" style="margin-top: 2rem;">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Full Name <span
+                                style="color: var(--danger-color)">*</span></label>
+                        <input type="text" id="name" class="form-control" placeholder="Enter your full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regNumber" class="form-label">Register Number <span
+                                style="color: var(--danger-color)">*</span></label>
+                        <input type="text" id="regNumber" class="form-control" placeholder="Enter your register number"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="department" class="form-label">Department <span
+                                style="color: var(--danger-color)">*</span></label>
+                        <select id="department" class="form-control" required>
+                            <option value="">Select Department</option>
+                            <option value="BCA">BCA</option>
+                            <option value="BTech">B.Tech</option>
+                            <option value="BSc">B.Sc</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address (Optional)</label>
+                        <input type="email" id="email" class="form-control" placeholder="Enter your email address">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">Continue to Setup</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="about section animate-fade-in" style="animation-delay: 0.4s;">
+            <div class="card">
+                <h2>About This Project</h2>
+                <p>This Online Quiz & Examination System was built as a comprehensive BCA Final Year Project. It
+                    demonstrates a robust, client-side application architecture using modern web technologies.</p>
+                <p>Designed with a focus on User Experience (UX), it features a fully responsive layout, dynamic dark
+                    mode, and seamless state management using browser LocalStorage.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container text-center">
+            <p>&copy; 2026 QuizPro - BCA Final Year Project. All rights reserved. | <a href="admin-login.html"
+                    style="color: var(--text-secondary); text-decoration: none;">Admin Portal</a></p>
+        </div>
+    </footer>
+
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+    <script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
+</body>
+
+</html>
