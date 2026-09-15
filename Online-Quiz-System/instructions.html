@@ -1,309 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Instructions - QuizPro</title>
+    <title>Assessment Instructions - QuizPro</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/quiz.css">
     <link rel="stylesheet" href="css/responsive.css">
 </head>
-<body><div class="global-loader" id="loader"><div class="spinner"></div></div>
+
+<body>
+    <div class="global-loader" id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Header Navigation -->
     <header class="animate-fade-in container">
         <a href="index.html" class="logo">🎓 QuizPro</a>
-        <nav style="display: flex; gap: 0.5rem; align-items: center;">
-            <span id="user-display" style="font-weight: 500;"></span>
+        <nav style="display: flex; gap: 0.75rem; align-items: center;">
+            <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+            <button type="button" class="theme-toggle nav-icon-btn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme">🌓</button>
+            <div class="user-auth-widget"></div>
         </nav>
+        <button type="button" class="quizpro-mobile-toggle" id="quizproMobileToggle" aria-label="Open Mobile Menu">☰</button>
     </header>
 
-    <main class="container animate-fade-in" style="animation-delay: 0.1s;">
-        <div class="card">
-            <h2 style="text-align: center; margin-bottom: 1.5rem;">Quiz Instructions & Setup</h2>
-            
-            <div style="background: var(--bg-color); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid var(--primary-color);">
-                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">Please read the rules carefully:</h3>
-                <ul style="margin-left: 1.5rem; color: var(--text-secondary); line-height: 1.8; font-size: 1.05rem;">
-                    <li><strong>Number of Questions:</strong> The quiz consists of exactly <strong>10 random questions</strong>.</li>
-                    <li><strong>Timer Information:</strong> You have a strict time limit of <strong>30 seconds per question</strong>. The quiz will automatically move to the next question when the time is up.</li>
-                    <li><strong>Navigation:</strong> You can skip questions and use the Previous button to review answered questions.</li>
-                    <li><strong>Passing Marks:</strong> You must score at least <strong>60% (6/10)</strong> to pass the quiz and earn your certificate.</li>
-                    <li><strong>Grading:</strong> Your final grade (A+, A, B, C, or Fail) will be calculated based on your final percentage.</li>
+    <!-- Mobile Navigation Drawer -->
+    <div class="quizpro-drawer-overlay" id="quizproDrawerOverlay"></div>
+    <aside class="quizpro-mobile-drawer" id="quizproMobileDrawer">
+        <div>
+            <div class="quizpro-drawer-header">
+                <a href="index.html" class="logo">🎓 QuizPro</a>
+                <button type="button" class="quizpro-drawer-close" id="quizproDrawerClose">&times;</button>
+            </div>
+            <div class="quizpro-drawer-nav">
+                <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+                <a href="leaderboard.html" class="btn btn-secondary">Leaderboard</a>
+                <a href="index.html" class="btn btn-secondary">Home</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="container">
+        <div class="card animate-fade-in" style="max-width: 750px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div class="badge badge-student" id="instrDeptBadge">BCA Department</div>
+                <h1 style="margin-top: 0.5rem;" id="instrSubjectTitle">Python Programming Assessment</h1>
+                <p style="color: var(--text-secondary);">Review examination rules and select difficulty level before starting.</p>
+            </div>
+
+            <!-- Quiz Config Box -->
+            <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.25rem; margin-bottom: 2rem; display: flex; justify-content: space-around; text-align: center;">
+                <div>
+                    <small style="color: var(--text-secondary); text-transform: uppercase;">Total Questions</small>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);" id="instrQCount">10</div>
+                </div>
+                <div>
+                    <small style="color: var(--text-secondary); text-transform: uppercase;">Time Limit</small>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--secondary-color);" id="instrTimeLimit">5 Mins</div>
+                </div>
+                <div>
+                    <small style="color: var(--text-secondary); text-transform: uppercase;">Passing Score</small>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--success-color);">50%</div>
+                </div>
+            </div>
+
+            <!-- Difficulty Selector -->
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label class="form-label" style="text-align: center; display: block;">Select Difficulty Level</label>
+                <div class="dept-pill-group" style="justify-content: center; margin-top: 0.5rem;">
+                    <button class="dept-pill active" onclick="setDifficulty('all', this)">All Difficulties</button>
+                    <button class="dept-pill" onclick="setDifficulty('easy', this)">🟢 Easy</button>
+                    <button class="dept-pill" onclick="setDifficulty('medium', this)">🟡 Medium</button>
+                    <button class="dept-pill" onclick="setDifficulty('hard', this)">🔴 Hard</button>
+                </div>
+            </div>
+
+            <!-- Rules & Guidelines List -->
+            <div style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem;">📌 Examination Rules & Keyboard Shortcuts</h3>
+                <ul style="padding-left: 1.25rem; color: var(--text-secondary); line-height: 1.8;">
+                    <li>Each question has a 30-second average time window. Live timer will pulse red when time is low.</li>
+                    <li>Use the <strong>Question Palette</strong> on the side to skip, review, or bookmark questions.</li>
+                    <li><strong>Keyboard Shortcuts:</strong> Press <code>1-4</code> or <code>A-D</code> to select options, <code>N</code> for Next, <code>P</code> for Previous, <code>B</code> to Bookmark, and <code>F</code> to Finish.</li>
+                    <li>You can toggle <strong>Fullscreen Mode</strong> during the quiz for maximum focus.</li>
+                    <li>Your progress is auto-saved locally so you can safely resume if disconnected.</li>
                 </ul>
             </div>
 
-            <form id="setup-form">
-                <div class="form-group" style="margin-bottom: 2.5rem;">
-                    <!-- Step 1: Department Selection -->
-                    <div id="department-selection-container">
-                        <label class="form-label" style="font-size: 1.2rem; margin-bottom: 1rem;">Select Department <span style="color: var(--danger-color)">*</span></label>
-                        <div class="category-grid department-grid">
-                            <div class="category-card dept-card" data-dept="General Topics">
-                                <div class="category-icon">🎯</div>
-                                <div class="category-name">General Topics</div>
-                            </div>
-                            <div class="category-card dept-card" data-dept="BCA">
-                                <div class="category-icon">💻</div>
-                                <div class="category-name">BCA</div>
-                            </div>
-                            <div class="category-card dept-card" data-dept="B.Sc">
-                                <div class="category-icon">🧪</div>
-                                <div class="category-name">B.Sc</div>
-                            </div>
-                            <div class="category-card dept-card" data-dept="B.Com CA">
-                                <div class="category-icon">📊</div>
-                                <div class="category-name">B.Com CA</div>
-                            </div>
-                            <div class="category-card dept-card" data-dept="BBA">
-                                <div class="category-icon">📈</div>
-                                <div class="category-name">BBA</div>
-                            </div>
-                            <div class="category-card dept-card" data-dept="B.Com">
-                                <div class="category-icon">💼</div>
-                                <div class="category-name">B.Com</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 2: Subject Selection (Hidden initially) -->
-                    <div id="subject-selection-container" style="display: none;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <label class="form-label" style="font-size: 1.2rem; margin: 0;">Select Subject <span style="color: var(--danger-color)">*</span></label>
-                            <button type="button" id="btn-back-dept" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">🔙 Back to Departments</button>
-                        </div>
-                        
-                        <div style="background: rgba(99, 102, 241, 0.1); padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid var(--primary-color);">
-                            <span style="font-weight: 600; color: var(--primary-color);">Selected Department: </span>
-                            <span id="selected-dept-display" style="font-weight: 700;"></span>
-                        </div>
-
-                        <div class="search-container" style="margin-bottom: 1.5rem; position: relative;">
-                            <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem;">🔍</span>
-                            <input type="text" id="subject-search" placeholder="Search subject..." style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem; background: var(--bg-color); color: var(--text-primary); outline: none; transition: border-color 0.3s;">
-                        </div>
-
-                        <div class="category-grid" id="dynamic-subject-grid">
-                            <!-- Subjects will be injected here via JS -->
-                        </div>
-                    </div>
-                    <input type="hidden" id="department" required>
-                    <input type="hidden" id="category" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Select Difficulty <span style="color: var(--danger-color)">*</span></label>
-                    <div class="category-grid" style="grid-template-columns: repeat(3, 1fr);">
-                        <div class="category-card difficulty-card" data-value="easy">
-                            <div class="category-icon">🟢</div>
-                            <div class="category-name">Easy</div>
-                        </div>
-                        <div class="category-card difficulty-card" data-value="medium">
-                            <div class="category-icon">🟡</div>
-                            <div class="category-name">Medium</div>
-                        </div>
-                        <div class="category-card difficulty-card" data-value="hard">
-                            <div class="category-icon">🔴</div>
-                            <div class="category-name">Hard</div>
-                        </div>
-                    </div>
-                    <input type="hidden" id="difficulty" required>
-                </div>
-                
-                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                    <button type="button" class="btn btn-secondary btn-block" onclick="window.location.href='index.html'">Back</button>
-                    <button type="submit" class="btn btn-primary btn-block">I Understand, Start Quiz</button>
-                </div>
-            </form>
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 1rem;">
+                <a href="dashboard.html" class="btn btn-secondary btn-large" style="flex: 1;">Cancel & Return</a>
+                <button type="button" class="btn btn-primary btn-large" style="flex: 2;" onclick="startAssessment()">🚀 Begin Assessment Now</button>
+            </div>
         </div>
     </main>
 
+    <footer class="footer">
+        <div class="container text-center">
+            <p>&copy; 2026 QuizPro - BCA Final Year Examination System</p>
+        </div>
+    </footer>
+
     <script src="js/storage.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/questions.js"></script>
+
     <script>
+        let selectedDifficulty = 'all';
+
         document.addEventListener('DOMContentLoaded', () => {
-            // Theme setup
-            const themeBtn = document.getElementById('theme-btn');
-            const settings = StorageHelper.getSettings();
-            if (themeBtn) {
-                themeBtn.textContent = settings.theme === 'dark' ? '☀️' : '🌙';
-                themeBtn.addEventListener('click', () => {
-                    const newTheme = StorageHelper.toggleTheme();
-                    themeBtn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
-                });
-            }
+            const config = StorageHelper.getQuizConfig();
+            const category = config.category || 'Python';
+            const dept = config.department || 'BCA';
 
-            // Display user name
-            const user = StorageHelper.getUser();
-            if (!user) {
-                window.location.href = 'index.html'; // Redirect if no user
-                return;
-            }
-            document.getElementById('user-display').textContent = `Hello, ${user.name}`;
+            document.getElementById('instrSubjectTitle').innerText = category + ' Assessment';
+            document.getElementById('instrDeptBadge').innerText = dept + ' Department';
 
-            // --- Multi-Step Category Logic ---
-            const departmentSubjects = {
-                "General Topics": [
-                    { name: "General Knowledge", icon: "🌍", value: "GeneralKnowledge" },
-                    { name: "Current Affairs", icon: "📰", value: "CurrentAffairs" },
-                    { name: "Aptitude", icon: "🧠", value: "Aptitude" },
-                    { name: "Logical Reasoning", icon: "🧩", value: "LogicalReasoning" },
-                    { name: "Computer Fundamentals", icon: "💻", value: "ComputerFundamentals" }
-                ],
-                "BCA": [
-                    { name: "HTML5", icon: "🌐", value: "HTML" },
-                    { name: "CSS3", icon: "🎨", value: "CSS" },
-                    { name: "JavaScript", icon: "⚡", value: "JavaScript" },
-                    { name: "C Programming", icon: "©️", value: "CProgramming" },
-                    { name: "C++", icon: "➕", value: "CPlusPlus" },
-                    { name: "Java", icon: "☕", value: "Java" },
-                    { name: "Python", icon: "🐍", value: "Python" },
-                    { name: "DBMS", icon: "💾", value: "DBMS" }
-                ],
-                "B.Sc": [
-                    { name: "Physics", icon: "⚛️", value: "Physics" },
-                    { name: "Chemistry", icon: "🧪", value: "Chemistry" },
-                    { name: "Mathematics", icon: "➗", value: "Mathematics" }
-                ],
-                "B.Com CA": [
-                    { name: "Financial Accounting", icon: "📒", value: "FinancialAccountingCA" },
-                    { name: "Business Accounting", icon: "🏢", value: "BusinessAccounting" },
-                    { name: "Computer Applications", icon: "🖥️", value: "ComputerApplications" },
-                    { name: "Tally", icon: "📊", value: "Tally" },
-                    { name: "E-Commerce", icon: "🛒", value: "ECommerce" },
-                    { name: "DBMS", icon: "🗄️", value: "DBMS_BComCA" },
-                    { name: "Office Automation", icon: "🖨️", value: "OfficeAutomation" }
-                ],
-                "BBA": [
-                    { name: "Management", icon: "👔", value: "Management" },
-                    { name: "Marketing", icon: "📈", value: "Marketing" },
-                    { name: "Business Ethics", icon: "🤝", value: "BusinessEthics" }
-                ],
-                "B.Com": [
-                    { name: "Financial Accounting", icon: "📒", value: "FinancialAccounting" },
-                    { name: "Corporate Accounting", icon: "💼", value: "CorporateAccounting" },
-                    { name: "Business Law", icon: "⚖️", value: "BusinessLaw" },
-                    { name: "Income Tax", icon: "💰", value: "IncomeTax" },
-                    { name: "Cost Accounting", icon: "📉", value: "CostAccounting" },
-                    { name: "Banking", icon: "🏦", value: "Banking" },
-                    { name: "Auditing", icon: "🔎", value: "Auditing" }
-                ]
-            };
-
-            const deptContainer = document.getElementById('department-selection-container');
-            const subjContainer = document.getElementById('subject-selection-container');
-            const deptCards = document.querySelectorAll('.dept-card');
-            const dynamicSubjectGrid = document.getElementById('dynamic-subject-grid');
-            const btnBackDept = document.getElementById('btn-back-dept');
-            const selectedDeptDisplay = document.getElementById('selected-dept-display');
-            const subjectSearch = document.getElementById('subject-search');
-            
-            const departmentInput = document.getElementById('department');
-            const categoryInput = document.getElementById('category');
-            const difficultyInput = document.getElementById('difficulty');
-            const submitBtn = document.querySelector('button[type="submit"]');
-
-            let currentDepartment = "";
-            let currentSubjects = [];
-
-            const validateForm = () => {
-                if (categoryInput.value && difficultyInput.value) {
-                    submitBtn.disabled = false;
-                    submitBtn.style.opacity = '1';
-                    submitBtn.style.cursor = 'pointer';
-                } else {
-                    submitBtn.disabled = true;
-                    submitBtn.style.opacity = '0.5';
-                    submitBtn.style.cursor = 'not-allowed';
-                }
-            };
-            
-            // Initial validation
-            validateForm();
-
-            const renderSubjects = (subjectsToRender) => {
-                dynamicSubjectGrid.innerHTML = '';
-                if(subjectsToRender.length === 0) {
-                    dynamicSubjectGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary);">No subjects found.</p>';
-                    return;
-                }
-                subjectsToRender.forEach(subj => {
-                    const card = document.createElement('div');
-                    card.className = 'category-card subj-card';
-                    card.dataset.value = subj.value;
-                    if (categoryInput.value === subj.value) {
-                        card.classList.add('selected');
-                    }
-                    card.innerHTML = `
-                        <div class="category-icon">${subj.icon}</div>
-                        <div class="category-name">${subj.name}</div>
-                    `;
-                    card.addEventListener('click', () => {
-                        document.querySelectorAll('.subj-card').forEach(c => c.classList.remove('selected'));
-                        card.classList.add('selected');
-                        categoryInput.value = subj.value;
-                        validateForm();
-                    });
-                    dynamicSubjectGrid.appendChild(card);
-                });
-            };
-
-            deptCards.forEach(card => {
-                card.addEventListener('click', () => {
-                    deptCards.forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    currentDepartment = card.dataset.dept;
-                    departmentInput.value = currentDepartment;
-                    
-                    categoryInput.value = '';
-                    subjectSearch.value = '';
-                    validateForm();
-                    
-                    selectedDeptDisplay.textContent = currentDepartment;
-                    currentSubjects = departmentSubjects[currentDepartment] || [];
-                    renderSubjects(currentSubjects);
-                    
-                    deptContainer.style.display = 'none';
-                    subjContainer.style.display = 'block';
-                });
-            });
-
-            btnBackDept.addEventListener('click', () => {
-                subjContainer.style.display = 'none';
-                deptContainer.style.display = 'block';
-            });
-
-            subjectSearch.addEventListener('input', (e) => {
-                const query = e.target.value.toLowerCase();
-                const filtered = currentSubjects.filter(s => s.name.toLowerCase().includes(query));
-                renderSubjects(filtered);
-            });
-
-            // Handle Difficulty Selection
-            const difficultyCards = document.querySelectorAll('.difficulty-card');
-            difficultyCards.forEach(card => {
-                card.addEventListener('click', () => {
-                    difficultyCards.forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    difficultyInput.value = card.dataset.value;
-                    validateForm();
-                });
-            });
-
-            // Handle Setup Form
-            document.getElementById('setup-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                
-                if (!categoryInput.value || !difficultyInput.value) {
-                    alert('Please select both a category and difficulty level.');
-                    return;
-                }
-
-                const config = {
-                    category: categoryInput.value,
-                    difficulty: difficultyInput.value
-                };
-                StorageHelper.saveQuizConfig(config);
-                window.location.href = 'quiz.html';
-            });
+            const questions = (typeof defaultQuizQuestions !== 'undefined' && defaultQuizQuestions[category]) ? defaultQuizQuestions[category] : [];
+            const count = questions.length || 10;
+            document.getElementById('instrQCount').innerText = count;
+            document.getElementById('instrTimeLimit').innerText = Math.ceil(count * 0.5) + ' Mins';
         });
+
+        function setDifficulty(diff, el) {
+            selectedDifficulty = diff;
+            const pills = el.parentElement.querySelectorAll('.dept-pill');
+            pills.forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function startAssessment() {
+            const config = StorageHelper.getQuizConfig();
+            config.difficulty = selectedDifficulty;
+            StorageHelper.saveQuizConfig(config);
+            StorageHelper.clearQuizState(); // Clear previous in-progress state
+            window.location.href = 'quiz.html';
+        }
     </script>
-<script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
 </body>
+
 </html>

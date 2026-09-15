@@ -1,59 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz in Progress - QuizPro</title>
+    <title>Live Assessment - QuizPro</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/quiz.css">
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
-<body><div class="global-loader" id="loader"><div class="spinner"></div></div>
+
+<body>
+    <div class="global-loader" id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Header Navigation -->
     <header class="animate-fade-in container">
-        <a href="#" class="logo">🎓 QuizPro</a>
-        <nav style="display: flex; gap: 0.5rem; align-items: center;">
-            <span id="user-display" style="font-weight: 500;"></span>
+        <a href="index.html" class="logo">🎓 QuizPro</a>
+        <nav style="display: flex; gap: 0.75rem; align-items: center;">
+            <button type="button" class="btn btn-secondary btn-sm" id="fullscreenToggleBtn" onclick="toggleFullscreen()">🖥️ Fullscreen</button>
+            <button type="button" class="theme-toggle nav-icon-btn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme">🌓</button>
         </nav>
     </header>
 
-    <main class="container animate-fade-in">
-        <div class="card">
-            <div class="quiz-header">
-                <div class="quiz-info">
-                    <span id="category-display">Category</span>
-                    <span id="difficulty-display">Difficulty</span>
-                    <span id="question-count">Question: 1/10</span>
+    <main class="container" style="max-width: 1100px;">
+        <!-- Resume Quiz Notification Banner -->
+        <div id="resumeBanner" class="alert-box alert-info" style="display: none; justify-content: space-between; align-items: center;">
+            <span>💾 Resumed in-progress quiz session from your previous attempt.</span>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('resumeBanner').style.display='none'">Dismiss</button>
+        </div>
+
+        <!-- Top Header Info & Timer -->
+        <div class="quiz-header card" style="padding: 1.25rem 2rem; margin-bottom: 1rem;">
+            <div>
+                <span class="badge badge-student" id="quizDeptBadge">BCA</span>
+                <h2 id="quizCategoryTitle" style="margin: 0.3rem 0 0 0; font-size: 1.4rem;">Python Assessment</h2>
+            </div>
+            <div class="quiz-info">
+                <div class="timer-box" id="timerBox">
+                    <span>⏱️</span> <span id="timerText">05:00</span>
                 </div>
-                <div class="timer-box">
-                    ⏱️ <span id="time-left">30</span>s
+            </div>
+        </div>
+
+        <!-- Progress Percentage Bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <!-- Two-column Quiz Layout -->
+        <div class="quiz-layout">
+            <!-- MAIN QUESTION CARD -->
+            <div class="question-card animate-fade-in">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-secondary);" id="questionCounter">Question 1 of 10</span>
+                    <span class="badge" id="questionDifficultyBadge" style="background: var(--primary-color); color: white;">Medium</span>
+                </div>
+
+                <!-- Code Snippet Box (If Code Question) -->
+                <div id="codeSnippetBox" class="code-block-view" style="display: none;">
+                    <pre><code id="codeSnippetText"></code></pre>
+                </div>
+
+                <!-- Image Box (If Image Question) -->
+                <div id="imageQuestionBox" class="question-image-box" style="display: none;">
+                    <div id="imageQuestionContent"></div>
+                </div>
+
+                <!-- Question Text -->
+                <div class="question-text" id="questionText">Loading question...</div>
+
+                <!-- Options Container -->
+                <div id="optionsContainer" class="options-container">
+                    <!-- Dynamic Options -->
+                </div>
+
+                <!-- Fill Blank Input Container -->
+                <div id="fillBlankBox" class="fill-blank-container" style="display: none;">
+                    <input type="text" id="fillBlankInput" class="fill-blank-input" placeholder="Type your answer here..." oninput="handleFillBlankInput(this.value)" />
+                </div>
+
+                <!-- Action Controls Bar -->
+                <div class="quiz-action-bar">
+                    <button class="btn btn-secondary" id="bookmarkBtn" onclick="toggleBookmarkCurrent()">★ Bookmark</button>
+                    <div style="display: flex; gap: 0.5rem; margin-left: auto;">
+                        <button class="btn btn-secondary" id="prevBtn" onclick="prevQuestion()" disabled>← Previous</button>
+                        <button class="btn btn-secondary" id="skipBtn" onclick="skipQuestion()">Skip</button>
+                        <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()">Next →</button>
+                    </div>
+                </div>
+
+                <div class="shortcuts-strip">
+                    Shortcuts: <code>1-4</code> / <code>A-D</code> Select Option | <code>N</code> Next | <code>P</code> Prev | <code>B</code> Bookmark | <code>F</code> Finish
                 </div>
             </div>
 
-            <div class="progress-container">
-                <div id="progress-bar" class="progress-bar"></div>
-            </div>
-
-            <div id="quiz-content">
-                <h3 id="question-text" class="question-text">Loading question...</h3>
-                <div id="options-container" class="options-container">
-                    <!-- Options will be injected here by JS -->
+            <!-- QUESTION PALETTE SIDEBAR -->
+            <div class="palette-card animate-fade-in">
+                <div class="palette-title">
+                    <span>Question Palette</span>
+                    <button class="btn btn-danger btn-sm" onclick="confirmFinishQuiz()">Finish Assessment</button>
                 </div>
-            </div>
 
-            <div class="quiz-footer" style="display: flex; justify-content: space-between; margin-top: 1rem; width: 100%;">
-                <button id="prev-btn" class="btn btn-secondary" style="visibility: hidden;">Previous</button>
-                <div style="display: flex; gap: 1rem;">
-                    <button id="skip-btn" class="btn btn-secondary">Skip</button>
-                    <button id="next-btn" class="btn btn-primary" style="display: none;">Next Question</button>
-                    <button id="finish-btn" class="btn btn-primary" style="display: none;">Finish Quiz</button>
+                <div class="palette-grid" id="paletteGrid">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <div class="palette-legend">
+                    <div class="legend-item"><span class="legend-dot ans"></span> Answered</div>
+                    <div class="legend-item"><span class="legend-dot curr"></span> Current Question</div>
+                    <div class="legend-item"><span class="legend-dot bm"></span> Bookmarked (★)</div>
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- Confirmation Modal -->
+    <div class="modal-backdrop" id="finishModal">
+        <div class="modal-card animate-scale-up text-center">
+            <h3>Finish Assessment?</h3>
+            <p id="finishSummaryText" style="margin: 1rem 0; color: var(--text-secondary);">You have answered 0 of 10 questions.</p>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn btn-secondary btn-block" onclick="document.getElementById('finishModal').classList.remove('active')">Continue Quiz</button>
+                <button class="btn btn-primary btn-block" onclick="submitQuizAttempt()">Submit Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="js/storage.js"></script>
-    <script src="js/questions.js"></script>
+    <script src="js/audio.js"></script>
     <script src="js/timer.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/questions.js"></script>
     <script src="js/quiz.js"></script>
-<script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
+
+    <script>
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.debug(err));
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+    </script>
 </body>
+
 </html>

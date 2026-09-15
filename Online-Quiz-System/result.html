@@ -4,83 +4,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Result - QuizPro</title>
+    <title>Assessment Result - QuizPro</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/result.css">
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 
 <body>
     <div class="global-loader" id="loader">
         <div class="spinner"></div>
     </div>
+
+    <!-- Header Navigation -->
     <header class="animate-fade-in container">
         <a href="index.html" class="logo">🎓 QuizPro</a>
-        <nav style="display: flex; gap: 0.5rem; align-items: center;">
+        <nav style="display: flex; gap: 0.75rem; align-items: center;">
             <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+            <a href="leaderboard.html" class="btn btn-secondary">Leaderboard</a>
+            <button type="button" class="theme-toggle nav-icon-btn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme">🌓</button>
+            <div class="user-auth-widget"></div>
         </nav>
     </header>
 
-    <main class="container animate-fade-in">
-        <div class="card" id="result-card">
-            <div class="result-header">
-                <h2>Quiz Completed!</h2>
-                <div id="grade-badge" class="grade-badge">A+</div>
-                <h3 id="score-text">You scored 10 out of 10</h3>
-                <p id="percentage-text" style="font-weight: bold;">(100%)</p>
-            </div>
+    <main class="container" style="max-width: 850px;">
+        <div class="card animate-fade-in text-center" style="margin-bottom: 2rem;">
+            <!-- Category Title & Student Banner -->
+            <span class="badge badge-student" id="resDeptBadge">BCA Department</span>
+            <h1 id="resSubjectTitle" style="margin: 0.5rem 0 0 0;">Assessment Completed</h1>
+            <p style="color: var(--text-secondary);" id="resStudentName">Student Name</p>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div id="correct-answers" class="stat-value">0</div>
-                    <div class="stat-label">Correct</div>
-                </div>
-                <div class="stat-card">
-                    <div id="wrong-answers" class="stat-value">0</div>
-                    <div class="stat-label">Wrong</div>
-                </div>
-                <div class="stat-card">
-                    <div id="unanswered" class="stat-value">0</div>
-                    <div class="stat-label">Unanswered</div>
-                </div>
-                <div class="stat-card">
-                    <div id="time-taken" class="stat-value">0s</div>
-                    <div class="stat-label">Total Time</div>
+            <!-- Circular Score Ring Gauge -->
+            <div class="score-gauge-box">
+                <div class="score-gauge-ring" id="scoreGaugeRing">
+                    <div class="score-gauge-inner">
+                        <span class="score-gauge-value" id="resPercentageText">0%</span>
+                        <span class="score-gauge-subtext" id="resGradeBadge">Grade A+</span>
+                    </div>
                 </div>
             </div>
 
-            <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem;">
-                <a href="review.html" class="btn btn-secondary">Review Answers</a>
-                <button id="print-btn" class="btn btn-primary" style="display: none;">Print Certificate</button>
+            <div id="resPassFailBadge" class="grade-badge" style="background: var(--success-color);">PASS</div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" style="margin-top: 2rem;">
+                <div class="stat-card">
+                    <div class="stat-value" id="resScoreText" style="color: var(--success-color);">0 / 0</div>
+                    <div class="stat-label">Correct Answers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="resWrongText" style="color: var(--danger-color);">0</div>
+                    <div class="stat-label">Wrong Answers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="resTimeText">00:00</div>
+                    <div class="stat-label">Time Taken</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="resRankText" style="color: var(--warning-color);">Rank #1</div>
+                    <div class="stat-label">Estimated Class Rank</div>
+                </div>
             </div>
         </div>
 
-        <div id="certificate-container" style="display: none;" class="animate-pop-in">
-            <div class="certificate">
-                <h1>Certificate of Completion</h1>
-                <h3>This is to certify that</h3>
-                <div id="cert-name" class="name">Student Name</div>
-                <p>has successfully completed the <strong id="cert-category">HTML5</strong> assessment.</p>
-                <p style="margin-top: 1rem;">
-                    Score: <strong id="cert-score">100%</strong> | Grade: <strong id="cert-grade">A+</strong>
-                </p>
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 3rem;">
-                    <p style="font-size: 0.9rem; color: #777; text-align: left;">Issued on: <br><strong id="cert-date"
-                            style="color: #333;">Date</strong></p>
-                    <div style="text-align: center;">
-                        <div
-                            style="font-family: 'Brush Script MT', cursive; font-size: 2.5rem; color: var(--primary-color); border-bottom: 2px solid #ccc; padding-bottom: 0px; margin-bottom: 5px; line-height: 1; min-width: 150px;">
-                            QuizPro Admin</div>
-                        <p style="font-size: 0.8rem; color: #777; margin: 0; text-transform: uppercase;">Authorized
-                            Signature</p>
-                    </div>
-                </div>
+        <!-- HTML5 Canvas Analytics Chart -->
+        <div class="analytics-chart-box animate-fade-in" style="animation-delay: 0.2s;">
+            <h3 style="margin-bottom: 1rem; text-align: center;">📊 Performance Analytics & Accuracy Breakdown</h3>
+            <div class="canvas-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Action Bar Buttons -->
+        <div class="card animate-fade-in" style="animation-delay: 0.3s;">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                <a href="review.html" class="btn btn-secondary btn-large">🔍 Review Question Answers</a>
+                <a href="certificate.html" id="certDownloadBtn" class="btn btn-primary btn-large">📜 Download Official Certificate</a>
+                <button class="btn btn-secondary btn-large" onclick="window.print()">🖨️ Print Result</button>
+                <button class="btn btn-secondary btn-large" onclick="shareResultCard()">🔗 Share Score</button>
+                <a href="instructions.html" class="btn btn-secondary btn-large">🔄 Retake Quiz</a>
             </div>
         </div>
     </main>
 
+    <footer class="footer">
+        <div class="container text-center">
+            <p>&copy; 2026 QuizPro - BCA Final Year Examination System</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
     <script src="js/storage.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/result.js"></script>
-    <script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
 </body>
 
 </html>

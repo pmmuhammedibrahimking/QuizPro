@@ -1,83 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - QuizPro</title>
+    <title>Platform Settings - QuizPro</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
-<body><div class="global-loader" id="loader"><div class="spinner"></div></div>
+
+<body>
+    <div class="global-loader" id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Header Navigation -->
     <header class="animate-fade-in container">
         <a href="index.html" class="logo">🎓 QuizPro</a>
-        <nav style="display: flex; gap: 0.5rem; align-items: center;">
+        <nav style="display: flex; gap: 0.75rem; align-items: center;">
             <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
-            <a href="index.html" class="btn btn-secondary">Home</a>
+            <button type="button" class="theme-toggle nav-icon-btn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme">🌓</button>
+            <div class="user-auth-widget"></div>
         </nav>
+        <button type="button" class="quizpro-mobile-toggle" id="quizproMobileToggle" aria-label="Open Mobile Menu">☰</button>
     </header>
 
-    <main class="container animate-fade-in">
-        <div class="card" style="max-width: 500px; margin: 0 auto;">
-            <h2 style="margin-bottom: 2rem; text-align: center;">Preferences ⚙️</h2>
-            
-            <div class="form-group settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-color); border-radius: 8px; border: 2px solid var(--border-color);">
-                <label class="form-label" style="margin: 0; font-weight: 500; cursor: pointer;" for="setting-theme">Dark Mode</label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="setting-theme">
-                    <span class="slider"></span>
-                </label>
+    <!-- Mobile Navigation Drawer -->
+    <div class="quizpro-drawer-overlay" id="quizproDrawerOverlay"></div>
+    <aside class="quizpro-mobile-drawer" id="quizproMobileDrawer">
+        <div>
+            <div class="quizpro-drawer-header">
+                <a href="index.html" class="logo">🎓 QuizPro</a>
+                <button type="button" class="quizpro-drawer-close" id="quizproDrawerClose">&times;</button>
             </div>
+            <div class="quizpro-drawer-nav">
+                <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+                <a href="leaderboard.html" class="btn btn-secondary">Leaderboard</a>
+                <a href="index.html" class="btn btn-secondary">Home</a>
+            </div>
+        </div>
+    </aside>
 
-            <div class="form-group settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-color); border-radius: 8px; border: 2px solid var(--border-color); margin-top: 1rem;">
-                <label class="form-label" style="margin: 0; font-weight: 500; cursor: pointer;" for="setting-sound">Sound Effects</label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="setting-sound">
-                    <span class="slider"></span>
-                </label>
-            </div>
+    <main class="container" style="max-width: 750px;">
+        <div class="card animate-fade-in" style="margin-bottom: 2rem;">
+            <h2>⚙️ Platform & Accessibility Settings</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Customize your visual theme, sound effects, typography size, and system preferences.</p>
 
-            <div class="form-group settings-row" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-color); border-radius: 8px; border: 2px solid var(--border-color); margin-top: 1rem;">
-                <label class="form-label" style="margin: 0; font-weight: 500; cursor: pointer;" for="setting-timer">Enable Timer (30s)</label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="setting-timer">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            
-            <div style="margin-top: 2rem; text-align: center;">
-                <button id="save-settings" class="btn btn-primary btn-block">Save Settings</button>
+            <!-- SETTINGS FORM -->
+            <div class="settings-list">
+                <!-- Theme Selection -->
+                <div class="settings-row card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>Visual Theme</strong>
+                        <p style="font-size: 0.85rem; margin: 0;">Switch between vibrant Light mode and Cyberpunk Dark mode.</p>
+                    </div>
+                    <select id="settingTheme" class="form-control" style="width: 150px;" onchange="updateSystemSetting('theme', this.value)">
+                        <option value="light">Light Mode</option>
+                        <option value="dark">Dark Mode</option>
+                    </select>
+                </div>
+
+                <!-- Font Size Scaling -->
+                <div class="settings-row card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>Font Size & Accessibility</strong>
+                        <p style="font-size: 0.85rem; margin: 0;">Scale text size across the entire application interface.</p>
+                    </div>
+                    <select id="settingFontSize" class="form-control" style="width: 150px;" onchange="updateSystemSetting('fontSize', this.value)">
+                        <option value="small">Small</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="large">Large</option>
+                    </select>
+                </div>
+
+                <!-- High Contrast Mode -->
+                <div class="settings-row card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>High Contrast Mode</strong>
+                        <p style="font-size: 0.85rem; margin: 0;">Enhance color contrast for better screen reader readability.</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="settingHighContrast" onchange="updateSystemSetting('highContrast', this.checked)" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Sound Effects & Web Audio API -->
+                <div class="settings-row card" style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div>
+                            <strong>Audio Feedback & Sound Effects</strong>
+                            <p style="font-size: 0.85rem; margin: 0;">Play sound chimes for clicks, correct/wrong answers, and warnings.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="settingSound" onchange="updateSystemSetting('sound', this.checked)" checked />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <!-- Audio Test Buttons -->
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-secondary btn-sm" onclick="QuizAudio.playClick()">Test Click</button>
+                        <button class="btn btn-secondary btn-sm" onclick="QuizAudio.playCorrect()">Test Correct Chime</button>
+                        <button class="btn btn-secondary btn-sm" onclick="QuizAudio.playWrong()">Test Wrong Buzz</button>
+                        <button class="btn btn-secondary btn-sm" onclick="QuizAudio.playComplete()">Test Victory Fanfare</button>
+                    </div>
+                </div>
+
+                <!-- Reset System Data -->
+                <div class="settings-row card" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border-color: rgba(244, 63, 94, 0.3);">
+                    <div>
+                        <strong style="color: var(--danger-color);">Reset Platform Storage</strong>
+                        <p style="font-size: 0.85rem; margin: 0;">Clear local history, saved progress, and custom questions.</p>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="resetLocalPlatformStorage()">Reset Data</button>
+                </div>
             </div>
         </div>
     </main>
 
+    <footer class="footer">
+        <div class="container text-center">
+            <p>&copy; 2026 QuizPro - BCA Final Year Examination System</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
     <script src="js/storage.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const settings = StorageHelper.getSettings();
             
-            document.getElementById('setting-theme').checked = settings.theme === 'dark';
-            document.getElementById('setting-sound').checked = settings.sound;
-            document.getElementById('setting-timer').checked = settings.timer;
-
-            document.getElementById('save-settings').addEventListener('click', () => {
-                const newSettings = {
-                    theme: document.getElementById('setting-theme').checked ? 'dark' : 'light',
-                    sound: document.getElementById('setting-sound').checked,
-                    timer: document.getElementById('setting-timer').checked
-                };
-                
-                StorageHelper.saveSettings(newSettings);
-                StorageHelper.applyTheme();
-                
-                const btn = document.getElementById('save-settings');
-                btn.textContent = 'Saved! ✓';
-                btn.style.backgroundColor = 'var(--success-color)';
-                setTimeout(() => {
-                    btn.textContent = 'Save Settings';
-                    btn.style.backgroundColor = 'var(--primary-color)';
-                }, 2000);
-            });
+            document.getElementById('settingTheme').value = settings.theme || 'light';
+            document.getElementById('settingFontSize').value = settings.fontSize || 'medium';
+            document.getElementById('settingHighContrast').checked = !!settings.highContrast;
+            document.getElementById('settingSound').checked = settings.sound !== false;
         });
+
+        function updateSystemSetting(key, val) {
+            const current = StorageHelper.getSettings();
+            current[key] = val;
+            StorageHelper.saveSettings(current);
+            QuizAudio.playClick();
+        }
+
+        function resetLocalPlatformStorage() {
+            if (confirm('Are you sure you want to reset all local storage data? This will clear history and saved attempts.')) {
+                localStorage.clear();
+                alert('Platform storage reset successfully!');
+                window.location.reload();
+            }
+        }
     </script>
-<script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
 </body>
+
 </html>

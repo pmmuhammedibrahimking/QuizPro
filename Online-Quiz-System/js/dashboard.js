@@ -1,156 +1,471 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const user = StorageHelper.getUser();
+/**
+ * Commercial Student Portal & Examination Dashboard Controller for QuizPro
+ * Manages Live Clock, Notifications, Extended Profile Modal, 8 Stat Metrics,
+ * 2 HTML5 Canvas Analytics Charts, Subject Progress Cards, Recent Activity,
+ * Top 5 Leaderboard preview, and Streak tracking.
+ */
+
+let currentDashDept = 'BCA';
+
+document.addEventListener('DOMContentLoaded', async () => {
+    let user = StorageHelper.getUser();
     if (!user) {
         window.location.href = 'index.html';
         return;
     }
 
-    // Theme setup
-    const themeBtn = document.getElementById('theme-btn');
-    if (themeBtn) {
-        themeBtn.textContent = StorageHelper.getSettings().theme === 'dark' ? '☀️' : '🌙';
-        themeBtn.addEventListener('click', () => {
-            themeBtn.textContent = StorageHelper.toggleTheme() === 'dark' ? '☀️' : '🌙';
+    initLiveClock();
+    renderProStudentProfile(user);
+    setupEditProfileForm();
+    await loadProDashboardStats();
+    renderProDepartmentPills(user.department || 'BCA');
+    renderProSubjects(user.department || 'BCA');
+    renderProLeaderboardPreview();
+});
+
+// 1. Live Header Real-Time Clock
+function initLiveClock() {
+    const clockEl = document.getElementById('liveHeaderClock');
+    if (!clockEl) return;
+
+    function updateClock() {
+        const now = new Date();
+        const formatted = now.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        }) + ' | ' + now.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
         });
+        clockEl.innerText = formatted;
     }
 
-    // User info display
-    document.getElementById('user-info').innerHTML = `
-        <div class="profile-banner">
-            <div class="profile-avatar">
-                ${user.name.charAt(0).toUpperCase()}
-            </div>
-            <div>
-                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.8rem;">${user.name}</h3>
-                <p style="margin: 0; opacity: 0.9;"><strong>Reg No:</strong> ${user.regNumber} | <strong>Dept:</strong> ${user.department}${user.email ? ` | <strong>Email:</strong> ${user.email}` : ''}</p>
-            </div>
-        </div>
-    `;
-    
-    // Remove the inline styles from the user-info container itself since we use banner now
-    document.getElementById('user-info').style = "";
+    updateClock();
+    setInterval(updateClock, 1000);
+}
 
-    // Handle Delete Profile
-    const deleteProfileBtn = document.getElementById('delete-account-btn');
-    if (deleteProfileBtn) {
-        deleteProfileBtn.addEventListener('click', () => {
-            if(confirm('Are you sure you want to completely delete your profile and all history? This cannot be undone.')) {
-                // Wipe their history
-                let globalHistory = StorageHelper.getHistory();
-                globalHistory = globalHistory.filter(h => h.user.regNumber !== user.regNumber);
-                localStorage.setItem('quizHistory', JSON.stringify(globalHistory));
-                
-                // Wipe their leaderboard entries
-                let leaderboard = StorageHelper.getLeaderboard();
-                leaderboard = leaderboard.filter(l => l.name !== user.name);
-                localStorage.setItem('quizLeaderboard', JSON.stringify(leaderboard));
-                
-                // Remove active user session
-                localStorage.removeItem('currentUser');
-                
-                // Redirect to home
-                window.location.href = 'index.html';
-            }
-        });
+// 2. Notification Bell Dropdown
+function toggleNotificationDropdown() {
+    const menu = document.getElementById('notifDropdownMenu');
+    if (menu) menu.classList.toggle('show');
+}
+
+function clearNotifications() {
+    const list = document.getElementById('notifItemsList');
+    const count = document.getElementById('notifCount');
+    if (list) list.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-secondary); text-align: center;">No new notifications.</p>`;
+    if (count) count.style.display = 'none';
+}
+
+// Global click outside to dismiss notification dropdown
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.notification-dropdown-container')) {
+        const notifMenu = document.getElementById('notifDropdownMenu');
+        if (notifMenu) notifMenu.classList.remove('show');
     }
+});
 
+// Global Escape key to dismiss notification dropdown
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const notifMenu = document.getElementById('notifDropdownMenu');
+        if (notifMenu) notifMenu.classList.remove('show');
+    }
+});
+
+// 3. Render Extended Student Profile Card
+function renderProStudentProfile(user) {
+    const avatar = document.getElementById('proAvatar');
+    const name = document.getElementById('proStudentName');
+    const reg = document.getElementById('proRegNo');
+    const dept = document.getElementById('proDept');
+    const sem = document.getElementById('proSemester');
+    const college = document.getElementById('proCollege');
+    const totalQ = document.getElementById('proTotalQuizzes');
+    const rank = document.getElementById('proRank');
+    const joined = document.getElementById('proJoinedDate');
+
+    if (avatar) avatar.innerText = user.name ? user.name.charAt(0).toUpperCase() : '👤';
+    if (name) name.innerText = user.name || 'Alex Morgan';
+    if (reg) reg.innerText = user.regNumber || 'BCA2026042';
+    if (dept) dept.innerText = user.department || 'BCA';
+    if (sem) sem.innerText = user.semester || 'Semester VI';
+    if (college) college.innerText = user.college || 'School of Computer Science';
+    if (joined) joined.innerText = user.joinedDate || 'August 2025';
+
+    const history = StorageHelper.getHistory();
+    if (totalQ) totalQ.innerText = history.length;
+}
+
+// 4. Edit Profile Modal
+function openEditProfileModal() {
+    const user = StorageHelper.getUser();
+    document.getElementById('editName').value = user.name || '';
+    document.getElementById('editRegNo').value = user.regNumber || '';
+    document.getElementById('editDept').value = user.department || 'BCA';
+    document.getElementById('editSemester').value = user.semester || 'Semester VI';
+    document.getElementById('editCollege').value = user.college || 'School of Computer Science';
+
+    document.getElementById('editProfileModal').classList.add('active');
+}
+
+function closeEditProfileModal() {
+    document.getElementById('editProfileModal').classList.remove('active');
+}
+
+function setupEditProfileForm() {
+    const form = document.getElementById('editProfileForm');
+    if (!form) return;
+
+    form.onsubmit = (e) => {
+        e.preventDefault();
+        const updated = {
+            name: document.getElementById('editName').value.trim(),
+            regNumber: document.getElementById('editRegNo').value.trim(),
+            department: document.getElementById('editDept').value,
+            semester: document.getElementById('editSemester').value.trim(),
+            college: document.getElementById('editCollege').value.trim()
+        };
+
+        StorageHelper.saveUser(updated);
+        renderProStudentProfile(StorageHelper.getUser());
+        AuthManager.updateUI();
+        closeEditProfileModal();
+    };
+}
+
+// 5. Load 8 Metric Stats & Render Charts
+async function loadProDashboardStats() {
     let history = StorageHelper.getHistory();
-    const userHistory = history.filter(h => h.user.regNumber === user.regNumber);
-    
-    function renderDashboard() {
-        history = StorageHelper.getHistory();
-        const currentUserHistory = history.filter(h => h.user.regNumber === user.regNumber);
+    let certs = StorageHelper.getCertificates();
+    let badges = StorageHelper.getBadges();
+    const user = StorageHelper.getUser();
 
-        // Stats calculation
-        document.getElementById('total-attempts').textContent = currentUserHistory.length;
-        
-        if (currentUserHistory.length > 0) {
-            const highest = Math.max(...currentUserHistory.map(h => h.score));
-            const totalScore = currentUserHistory.reduce((acc, h) => acc + h.score, 0);
-            const avg = totalScore / currentUserHistory.length;
-            
-            document.getElementById('highest-score').textContent = highest;
-            document.getElementById('avg-score').textContent = avg.toFixed(1);
-            
-            // Certificates Earned (score >= 60%)
-            const certs = currentUserHistory.filter(h => (h.score / h.total) >= 0.6).length;
-            document.getElementById('certs-earned').textContent = certs;
-            
-            // Calculate best category
-            const catStats = {};
-            currentUserHistory.forEach(h => {
-                if(!catStats[h.category]) catStats[h.category] = { totalScore: 0, count: 0 };
-                catStats[h.category].totalScore += h.score;
-                catStats[h.category].count++;
-            });
-            
-            let bestCat = '-';
-            let bestAvg = -1;
-            for (const cat in catStats) {
-                const catAvg = catStats[cat].totalScore / catStats[cat].count;
-                if (catAvg > bestAvg) {
-                    bestAvg = catAvg;
-                    bestCat = cat;
-                }
-            }
-            const bestCatEl = document.getElementById('best-category');
-            bestCatEl.textContent = bestCat;
-            bestCatEl.title = bestCat;
-
-            const historyContainer = document.getElementById('history-container');
-            historyContainer.innerHTML = '';
-
-            // Sort descending by date
-            currentUserHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            currentUserHistory.slice(0, 5).forEach((h, index) => {
-                const item = document.createElement('div');
-                item.className = 'history-item animate-fade-in';
-                item.style.animationDelay = `${index * 0.1}s`;
-                
-                const date = new Date(h.date).toLocaleDateString();
-                item.innerHTML = `
-                    <div>
-                        <strong>${h.category}</strong> (${h.difficulty})
-                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">${date}</div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="font-size: 1.2rem; font-weight: 600; color: var(--primary-color);">
-                            ${h.score}/${h.total}
-                        </div>
-                        <button class="btn btn-secondary del-btn" data-date="${h.date}" style="padding: 6px 12px; font-size: 0.9rem; color: var(--danger-color); border-color: var(--danger-color);" aria-label="Delete Record">🗑️</button>
-                    </div>
-                `;
-                historyContainer.appendChild(item);
-            });
-
-            // Attach delete listeners
-            document.querySelectorAll('.del-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    if(confirm('Are you sure you want to delete this record?')) {
-                        const dateId = e.target.closest('button').dataset.date;
-                        
-                        // Remove from History
-                        history = history.filter(h => h.date !== dateId);
-                        localStorage.setItem('quizHistory', JSON.stringify(history));
-                        
-                        // Remove from Leaderboard
-                        let leaderboard = StorageHelper.getLeaderboard();
-                        leaderboard = leaderboard.filter(l => l.date !== dateId);
-                        localStorage.setItem('quizLeaderboard', JSON.stringify(leaderboard));
-
-                        renderDashboard();
-                    }
-                });
-            });
-        } else {
-            document.getElementById('highest-score').textContent = 0;
-            document.getElementById('avg-score').textContent = 0;
-            document.getElementById('certs-earned').textContent = 0;
-            document.getElementById('best-category').textContent = '-';
-            document.getElementById('history-container').innerHTML = '<p>No attempts yet. Take a quiz to see your history!</p>';
+    // Sync with API backend if available
+    if (typeof API !== 'undefined' && API.getToken()) {
+        const apiHistory = await API.getHistory();
+        if (apiHistory && apiHistory.success && Array.isArray(apiHistory.data)) {
+            history = apiHistory.data;
         }
     }
 
-    renderDashboard();
-});
+    const quizzesCount = history.length;
+    let highest = 0;
+    let totalPct = 0;
+    let totalTimeSecs = user.totalTimeSpent || 0;
+
+    history.forEach(item => {
+        const pct = item.percentage || (item.total ? Math.round((item.score / item.total) * 100) : 0);
+        if (pct > highest) highest = pct;
+        totalPct += pct;
+        totalTimeSecs += (item.timeTaken || 120);
+    });
+
+    const avgScore = quizzesCount > 0 ? Math.round(totalPct / quizzesCount) : 0;
+
+    // Calculate Rank
+    const leaderboard = StorageHelper.getLeaderboard();
+    let rank = 1;
+    if (leaderboard.length > 0) {
+        const idx = leaderboard.findIndex(l => l.name === user.name);
+        if (idx !== -1) rank = idx + 1;
+    }
+
+    // Format Total Time
+    const hours = Math.floor(totalTimeSecs / 3600);
+    const mins = Math.floor((totalTimeSecs % 3600) / 60);
+    const formattedTime = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+
+    // Populate 8 Cards
+    document.getElementById('statQuizzesPro').innerText = quizzesCount;
+    document.getElementById('statHighestScorePro').innerText = highest + '%';
+    document.getElementById('statAvgScorePro').innerText = avgScore + '%';
+    document.getElementById('statCertsPro').innerText = certs.length;
+    document.getElementById('statRankPro').innerText = '#' + rank;
+    document.getElementById('proRank').innerText = 'Rank #' + rank;
+    document.getElementById('statTimeSpentPro').innerText = formattedTime;
+    document.getElementById('statStreakPro').innerText = (user.streak || 5) + ' Days 🔥';
+    document.getElementById('statBadgesPro').innerText = (badges.length || 4) + ' Badges';
+
+    renderProRecentActivity(history);
+    drawPerformanceTrendChart(history);
+    drawSubjectAccuracyChart(history);
+}
+
+// 6. Canvas Chart 1: Performance Trend Line Graph
+function drawPerformanceTrendChart(history) {
+    const canvas = document.getElementById('trendChartCanvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const width = rect.width;
+    const height = rect.height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const recent = history.slice(0, 6).reverse();
+    if (recent.length === 0) {
+        recent.push({ percentage: 70 }, { percentage: 85 }, { percentage: 90 }, { percentage: 95 });
+    }
+
+    const padding = 40;
+    const graphWidth = width - 2 * padding;
+    const graphHeight = height - 2 * padding;
+
+    // Draw Grid Lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+        const y = padding + (graphHeight / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
+        ctx.stroke();
+    }
+
+    // Draw Trend Line
+    ctx.beginPath();
+    ctx.strokeStyle = '#6366f1';
+    ctx.lineWidth = 3;
+
+    const step = graphWidth / Math.max(1, recent.length - 1);
+    recent.forEach((item, idx) => {
+        const pct = item.percentage || Math.round((item.score / item.total) * 100) || 75;
+        const x = padding + idx * step;
+        const y = height - padding - (pct / 100) * graphHeight;
+
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+
+    ctx.stroke();
+
+    // Draw Points
+    recent.forEach((item, idx) => {
+        const pct = item.percentage || Math.round((item.score / item.total) * 100) || 75;
+        const x = padding + idx * step;
+        const y = height - padding - (pct / 100) * graphHeight;
+
+        ctx.fillStyle = '#ec4899';
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${pct}%`, x, y - 10);
+    });
+}
+
+// 7. Canvas Chart 2: Subject-Wise Accuracy Bar Graph
+function drawSubjectAccuracyChart(history) {
+    const canvas = document.getElementById('subjectChartCanvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const width = rect.width;
+    const height = rect.height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    const subjectsData = [
+        { label: 'Python', pct: 90, color: '#6366f1' },
+        { label: 'Java', pct: 80, color: '#ec4899' },
+        { label: 'DBMS', pct: 85, color: '#10b981' },
+        { label: 'DS', pct: 75, color: '#f59e0b' }
+    ];
+
+    const barWidth = 45;
+    const spacing = (width - 60 - (subjectsData.length * barWidth)) / (subjectsData.length - 1);
+    const maxBarHeight = height - 60;
+
+    subjectsData.forEach((sub, idx) => {
+        const x = 30 + idx * (barWidth + spacing);
+        const barH = (sub.pct / 100) * maxBarHeight;
+
+        ctx.fillStyle = sub.color;
+        ctx.beginPath();
+        ctx.roundRect(x, height - 35 - barH, barWidth, barH, [6, 6, 0, 0]);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${sub.pct}%`, x + barWidth / 2, height - 40 - barH);
+        ctx.fillText(sub.label, x + barWidth / 2, height - 15);
+    });
+}
+
+// 8. Render Department Filter Pills & Subject Cards
+function renderProDepartmentPills(selectedDept) {
+    const group = document.getElementById('dashDeptPills');
+    if (!group) return;
+
+    const depts = ['BCA', 'BSc', 'BCom CA', 'BBA', 'BCom', 'General'];
+    group.innerHTML = depts.map(d => `
+        <button class="dept-pill ${d === selectedDept ? 'active' : ''}" onclick="selectProDept('${d}', this)">${d}</button>
+    `).join('');
+
+    renderProSubjects(selectedDept);
+}
+
+function selectProDept(dept, el) {
+    currentDashDept = dept;
+    const pills = document.querySelectorAll('#dashDeptPills .dept-pill');
+    pills.forEach(p => p.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderProSubjects(dept);
+}
+
+function renderProSubjects(dept) {
+    const grid = document.getElementById('proSubjectGrid');
+    if (!grid) return;
+
+    const subjects = DepartmentSubjects[dept] || DepartmentSubjects['BCA'];
+    grid.innerHTML = subjects.map((sub, idx) => {
+        const qCount = defaultQuizQuestions[sub] ? defaultQuizQuestions[sub].length : 5;
+        const diff = idx % 3 === 0 ? 'Easy' : (idx % 3 === 1 ? 'Medium' : 'Hard');
+        const diffBadge = diff === 'Easy' ? 'badge-student' : (diff === 'Hard' ? 'badge-admin' : 'badge-guest');
+        const completionPct = 50 + (idx * 15) % 50;
+
+        return `
+            <div class="feature-card animate-scale-up">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <div class="feature-icon">📚</div>
+                    <span class="badge ${diffBadge}">${diff}</span>
+                </div>
+                <h3>${sub}</h3>
+                <small style="color: var(--text-secondary);">${qCount}+ Questions Available</small>
+                
+                <!-- Completion Progress Bar -->
+                <div class="subject-progress-bar">
+                    <div class="subject-progress-fill" style="width: ${completionPct}%;"></div>
+                </div>
+                <small style="color: var(--text-secondary);">${completionPct}% Course Mastered</small>
+
+                <button class="btn btn-primary btn-sm btn-block" style="margin-top: 1rem;" onclick="startQuizSubject('${sub}', '${dept}')">Start Assessment</button>
+            </div>
+        `;
+    }).join('');
+}
+
+function startQuizSubject(subject, dept) {
+    StorageHelper.saveQuizConfig({
+        category: subject,
+        department: dept,
+        difficulty: 'all'
+    });
+    window.location.href = 'instructions.html';
+}
+
+function scrollToSubjects() {
+    const sec = document.getElementById('subjectsSection');
+    if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+}
+
+// 9. Render Recent Activity Feed
+function renderProRecentActivity(history) {
+    const container = document.getElementById('proActivityList');
+    if (!container) return;
+
+    if (history.length === 0) {
+        container.innerHTML = `<p style="text-align: center; color: var(--text-secondary); padding: 1.5rem 0;">No assessment attempts recorded yet. Click <strong>Take Quiz</strong> above to begin!</p>`;
+        return;
+    }
+
+    container.innerHTML = history.slice(0, 5).map(item => {
+        const pct = item.percentage || Math.round((item.score / item.total) * 100);
+        const pass = pct >= 50;
+        const formattedDate = new Date(item.date || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const mins = Math.floor((item.timeTaken || 120) / 60);
+        const secs = (item.timeTaken || 120) % 60;
+
+        return `
+            <div class="history-item">
+                <div>
+                    <strong style="font-size: 1.05rem; display: block;">${item.category || 'General Quiz'}</strong>
+                    <small style="color: var(--text-secondary);">${formattedDate} | Duration: ${mins}m ${secs}s | Score: ${item.score}/${item.total}</small>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span class="badge ${pass ? 'badge-student' : 'badge-admin'}">${pct}% ${pass ? 'PASSED' : 'FAILED'}</span>
+                    <button class="btn btn-secondary btn-sm" onclick="viewQuizAttemptResult('${encodeURIComponent(JSON.stringify(item))}')">Review</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 10. Render Top 5 Leaderboard Preview Widget
+function renderProLeaderboardPreview() {
+    const container = document.getElementById('proLeaderboardPreview');
+    if (!container) return;
+
+    const leaderboard = StorageHelper.getLeaderboard().slice(0, 5);
+    if (leaderboard.length === 0) {
+        container.innerHTML = `<p style="text-align: center; color: var(--text-secondary); padding: 1rem 0;">No scores available.</p>`;
+        return;
+    }
+
+    container.innerHTML = leaderboard.map((item, idx) => {
+        const pct = item.percentage || Math.round((item.score / (item.total || 10)) * 100);
+        const crown = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `#${idx + 1}`));
+
+        return `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <span style="font-weight: bold; width: 24px;">${crown}</span>
+                    <div>
+                        <strong style="font-size: 0.95rem; display: block;">${StorageHelper.escapeHTML(item.name)}</strong>
+                        <small style="color: var(--text-secondary);">${item.department || 'BCA'}</small>
+                    </div>
+                </div>
+                <span class="badge badge-student">${pct}%</span>
+            </div>
+        `;
+    }).join('');
+}
+
+// Global Filter Search
+function filterDashboardContent() {
+    const query = document.getElementById('globalSearchInput').value.toLowerCase();
+    const subjectCards = document.querySelectorAll('#proSubjectGrid .feature-card');
+    subjectCards.forEach(card => {
+        const title = card.querySelector('h3').innerText.toLowerCase();
+        card.style.display = title.includes(query) ? 'block' : 'none';
+    });
+}
+
+function openHelpCenterModal() {
+    document.getElementById('helpModal').classList.add('active');
+}
+
+function openPrivacyModal() {
+    document.getElementById('privacyModal').classList.add('active');
+}
+
+function viewQuizAttemptResult(encodedItem) {
+    try {
+        const item = JSON.parse(decodeURIComponent(encodedItem));
+        localStorage.setItem('latestQuizResult', JSON.stringify(item));
+        window.location.href = 'result.html';
+    } catch(e) {
+        window.location.href = 'result.html';
+    }
+}

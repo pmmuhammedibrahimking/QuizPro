@@ -1,142 +1,210 @@
+/**
+ * Admin Question Management Controller for QuizPro
+ * Supports CRUD operations across MCQs, True/False, Fill in Blank, Code, and Image questions.
+ */
+
+let allBank = {};
+let currentSelectedSubject = 'Python';
+
 document.addEventListener('DOMContentLoaded', () => {
-    StorageHelper.applyTheme();
-    const themeBtn = document.getElementById('theme-btn');
-    if (themeBtn) {
-        themeBtn.textContent = StorageHelper.getSettings().theme === 'dark' ? '☀️' : '🌙';
-        themeBtn.addEventListener('click', () => {
-            themeBtn.textContent = StorageHelper.toggleTheme() === 'dark' ? '☀️' : '🌙';
-        });
+    if (!AuthManager.isAdmin()) {
+        AuthManager.ensureAdminSession();
     }
 
-    let questionsDB = StorageHelper.getQuestions();
-    
-    // UI Elements
-    const tbody = document.getElementById('questions-tbody');
-    const searchInput = document.getElementById('search-input');
-    const catFilter = document.getElementById('category-filter');
-    const modal = document.getElementById('q-modal');
-    const form = document.getElementById('q-form');
-    
-    function renderTable() {
-        tbody.innerHTML = '';
-        const searchVal = searchInput.value.toLowerCase();
-        const catVal = catFilter.value;
-        
-        for (const category in questionsDB) {
-            if (catVal !== 'All' && category !== catVal) continue;
-            
-            questionsDB[category].forEach(q => {
-                // Search filter
-                if (searchVal && !q.q.toLowerCase().includes(searchVal)) return;
+    allBank = StorageHelper.getQuestions();
+    populateCategoryDropdowns();
+    loadQuestionsList();
+    setupFormSubmission();
+});
 
-                const tr = document.createElement('tr');
-                tr.style.borderBottom = '1px solid var(--border-color)';
-                tr.innerHTML = `
-                    <td style="padding: 1rem;">${category}</td>
-                    <td style="padding: 1rem;">${q.q}</td>
-                    <td style="padding: 1rem;">${q.options[q.answer]}</td>
-                    <td style="padding: 1rem; text-align: right; white-space: nowrap;">
-                        <button class="btn btn-secondary action-btn edit-btn" data-cat="${category}" data-id="${q.id}">Edit</button>
-                        <button class="btn btn-secondary action-btn del-btn" data-cat="${category}" data-id="${q.id}" style="color: var(--danger-color); border-color: var(--danger-color);">Del</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+function populateCategoryDropdowns() {
+    const sel = document.getElementById('adminSubjectSelect');
+    const modalSel = document.getElementById('qCategory');
+    if (!sel || !modalSel) return;
+
+    const categories = Object.keys(allBank);
+    sel.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+    modalSel.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+
+    currentSelectedSubject = categories[0] || 'Python';
+}
+
+function loadQuestionsList() {
+    const sel = document.getElementById('adminSubjectSelect');
+    if (sel) currentSelectedSubject = sel.value;
+
+    const list = allBank[currentSelectedSubject] || [];
+    renderQuestionsContainer(list);
+}
+
+function filterAdminQuestions() {
+    const query = document.getElementById('adminSearchInput').value.toLowerCase();
+    const list = allBank[currentSelectedSubject] || [];
+    const filtered = list.filter(q => q.q.toLowerCase().includes(query));
+    renderQuestionsContainer(filtered);
+}
+
+function renderQuestionsContainer(questions) {
+    const container = document.getElementById('adminQuestionsContainer');
+    if (!container) return;
+
+    if (questions.length === 0) {
+        container.innerHTML = `<div class="card text-center"><p style="color: var(--text-secondary);">No questions found for this subject.</p></div>`;
+        return;
+    }
+
+    container.innerHTML = questions.map((q, idx) => {
+        return `
+            <div class="card animate-fade-in" style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                    <div>
+                        <span class="badge badge-student">${(q.type || 'MCQ').toUpperCase()}</span>
+                        <span class="badge" style="background: var(--secondary-color); color: white;">${(q.difficulty || 'medium').toUpperCase()}</span>
+                        <h4 style="margin: 0.5rem 0 0.25rem 0;">${idx + 1}. ${StorageHelper.escapeHTML(q.q)}</h4>
+                        <small style="color: var(--text-secondary);">Explanation: ${StorageHelper.escapeHTML(q.explanation || 'N/A')}</small>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                        <button class="btn btn-secondary btn-sm" onclick="editQuestionItem('${q.id}')">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteQuestionItem('${q.id}')">Delete</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openQuestionModal(qData = null) {
+    const modal = document.getElementById('questionModal');
+    const form = document.getElementById('questionForm');
+    form.reset();
+
+    if (qData) {
+        document.getElementById('modalTitle').innerText = 'Edit Question';
+        document.getElementById('qId').value = qData.id;
+        document.getElementById('qCategory').value = currentSelectedSubject;
+        document.getElementById('qDifficulty').value = qData.difficulty || 'medium';
+        document.getElementById('qType').value = qData.type || 'mcq';
+        document.getElementById('qText').value = qData.q;
+        document.getElementById('qExplanation').value = qData.explanation || '';
+
+        if (qData.code) document.getElementById('qCode').value = qData.code;
+        if (qData.image) document.getElementById('qImage').value = qData.image;
+
+        if (qData.options && Array.isArray(qData.options)) {
+            qData.options.forEach((opt, idx) => {
+                const el = document.getElementById('opt' + idx);
+                if (el) el.value = opt;
             });
+            document.getElementById('qAnswerIdx').value = qData.answer;
         }
-        
-        // Attach event listeners to generated buttons
-        document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', handleEdit));
-        document.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', handleDelete));
+
+        if (qData.type === 'fill_blank') {
+            document.getElementById('qFillAnswer').value = qData.answer;
+        }
+
+        toggleTypeFields(qData.type || 'mcq');
+    } else {
+        document.getElementById('modalTitle').innerText = 'Add New Question';
+        document.getElementById('qId').value = '';
+        document.getElementById('qCategory').value = currentSelectedSubject;
+        toggleTypeFields('mcq');
     }
 
-    // Handlers
-    searchInput.addEventListener('input', renderTable);
-    catFilter.addEventListener('change', renderTable);
+    modal.classList.add('active');
+}
 
-    function handleDelete(e) {
-        if (!confirm('Are you sure you want to delete this question?')) return;
-        const cat = e.target.dataset.cat;
-        const id = e.target.dataset.id;
-        
-        questionsDB[cat] = questionsDB[cat].filter(q => q.id !== id);
-        StorageHelper.saveQuestions(questionsDB);
-        renderTable();
+function closeQuestionModal() {
+    const modal = document.getElementById('questionModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function toggleTypeFields(type) {
+    document.getElementById('fieldCode').style.display = type === 'code' ? 'block' : 'none';
+    document.getElementById('fieldImage').style.display = type === 'image' ? 'block' : 'none';
+    document.getElementById('fieldOptions').style.display = (type === 'mcq' || type === 'code' || type === 'image') ? 'block' : 'none';
+    document.getElementById('fieldFillBlank').style.display = type === 'fill_blank' ? 'block' : 'none';
+
+    if (type === 'true_false') {
+        document.getElementById('opt0').value = 'True';
+        document.getElementById('opt1').value = 'False';
+        document.getElementById('opt2').value = '';
+        document.getElementById('opt3').value = '';
+        document.getElementById('fieldOptions').style.display = 'block';
     }
+}
 
-    function handleEdit(e) {
-        const cat = e.target.dataset.cat;
-        const id = e.target.dataset.id;
-        const q = questionsDB[cat].find(qu => qu.id === id);
-        
-        document.getElementById('modal-title').textContent = 'Edit Question';
-        document.getElementById('edit-id').value = q.id;
-        document.getElementById('edit-original-cat').value = cat;
-        document.getElementById('modal-category').value = cat;
-        document.getElementById('modal-q').value = q.q;
-        document.getElementById('modal-opt0').value = q.options[0];
-        document.getElementById('modal-opt1').value = q.options[1];
-        document.getElementById('modal-opt2').value = q.options[2];
-        document.getElementById('modal-opt3').value = q.options[3];
-        document.getElementById('modal-answer').value = q.answer;
-        document.getElementById('modal-exp').value = q.explanation;
-        
-        modal.style.display = 'flex';
-    }
+function setupFormSubmission() {
+    const form = document.getElementById('questionForm');
+    if (!form) return;
 
-    document.getElementById('add-q-btn').addEventListener('click', () => {
-        document.getElementById('modal-title').textContent = 'Add New Question';
-        form.reset();
-        document.getElementById('edit-id').value = '';
-        document.getElementById('edit-original-cat').value = '';
-        modal.style.display = 'flex';
-    });
-
-    document.getElementById('close-modal').addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    form.addEventListener('submit', (e) => {
+    form.onsubmit = (e) => {
         e.preventDefault();
-        
-        const newCat = document.getElementById('modal-category').value;
-        const oldCat = document.getElementById('edit-original-cat').value;
-        const id = document.getElementById('edit-id').value || 'q' + Date.now();
-        
-        const newQ = {
-            id: id,
-            q: document.getElementById('modal-q').value,
-            options: [
-                document.getElementById('modal-opt0').value,
-                document.getElementById('modal-opt1').value,
-                document.getElementById('modal-opt2').value,
-                document.getElementById('modal-opt3').value
-            ],
-            answer: parseInt(document.getElementById('modal-answer').value),
-            explanation: document.getElementById('modal-exp').value
+        const id = document.getElementById('qId').value || ('q_' + Date.now());
+        const cat = document.getElementById('qCategory').value;
+        const type = document.getElementById('qType').value;
+        const diff = document.getElementById('qDifficulty').value;
+        const qText = document.getElementById('qText').value.trim();
+        const explanation = document.getElementById('qExplanation').value.trim();
+
+        const qObj = {
+            id,
+            type,
+            difficulty: diff,
+            q: qText,
+            explanation
         };
 
-        if (oldCat && oldCat !== newCat) {
-            // Category changed, remove from old
-            questionsDB[oldCat] = questionsDB[oldCat].filter(q => q.id !== id);
-        }
+        if (type === 'code') qObj.code = document.getElementById('qCode').value;
+        if (type === 'image') qObj.image = document.getElementById('qImage').value;
 
-        if (!questionsDB[newCat]) questionsDB[newCat] = [];
-        
-        if (oldCat && oldCat === newCat) {
-            // Update existing in same category
-            const idx = questionsDB[newCat].findIndex(q => q.id === id);
-            if (idx !== -1) questionsDB[newCat][idx] = newQ;
-            else questionsDB[newCat].push(newQ);
+        if (type === 'fill_blank') {
+            qObj.answer = document.getElementById('qFillAnswer').value.trim();
         } else {
-            // Add new
-            questionsDB[newCat].push(newQ);
+            qObj.options = [
+                document.getElementById('opt0').value.trim(),
+                document.getElementById('opt1').value.trim(),
+                document.getElementById('opt2').value.trim(),
+                document.getElementById('opt3').value.trim()
+            ].filter(o => o.length > 0);
+            qObj.answer = parseInt(document.getElementById('qAnswerIdx').value);
         }
 
-        StorageHelper.saveQuestions(questionsDB);
-        modal.style.display = 'none';
-        renderTable();
-    });
+        if (!allBank[cat]) allBank[cat] = [];
 
-    // Initial render
-    renderTable();
-});
+        const idx = allBank[cat].findIndex(q => q.id === id);
+        if (idx !== -1) allBank[cat][idx] = qObj;
+        else allBank[cat].push(qObj);
+
+        StorageHelper.saveQuestions(allBank);
+
+        // Submit API if available
+        if (typeof API !== 'undefined' && API.getToken()) {
+            if (idx !== -1) API.updateQuestion(id, qObj);
+            else API.addQuestion(qObj);
+        }
+
+        closeQuestionModal();
+        loadQuestionsList();
+    };
+}
+
+function editQuestionItem(id) {
+    const list = allBank[currentSelectedSubject] || [];
+    const qData = list.find(q => q.id === id);
+    if (qData) openQuestionModal(qData);
+}
+
+function deleteQuestionItem(id) {
+    if (!confirm('Are you sure you want to delete this question?')) return;
+
+    if (allBank[currentSelectedSubject]) {
+        allBank[currentSelectedSubject] = allBank[currentSelectedSubject].filter(q => q.id !== id);
+        StorageHelper.saveQuestions(allBank);
+    }
+
+    if (typeof API !== 'undefined' && API.getToken()) {
+        API.deleteQuestion(id);
+    }
+
+    loadQuestionsList();
+}

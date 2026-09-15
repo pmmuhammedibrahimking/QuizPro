@@ -1,64 +1,391 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard - QuizPro</title>
+    <title>Student Portal & Examination Dashboard - QuizPro</title>
+    <meta name="description" content="Professional Online Examination Portal for students featuring real-time analytics, course progress, verified certificates, and performance charts.">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
-<body><div class="global-loader" id="loader"><div class="spinner"></div></div>
-    <header class="animate-fade-in container">
-        <a href="index.html" class="logo">🎓 QuizPro</a>
-        <nav style="display: flex; gap: 0.5rem; align-items: center;">
-            <a href="index.html" class="btn btn-secondary">Home</a>
-            <a href="leaderboard.html" class="btn btn-secondary">Leaderboard</a>
+
+<body>
+    <div class="global-loader" id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Commercial Header Navigation -->
+    <header class="animate-fade-in container" style="max-width: 1200px;">
+        <a href="index.html" class="logo">🎓 QuizPro <span style="font-size: 0.75rem; color: var(--secondary-color); font-weight: normal;">PRO</span></a>
+
+        <!-- Global Search Bar -->
+        <div class="header-search-bar" style="margin: 0 1rem;">
+            <input type="text" id="globalSearchInput" class="form-control" placeholder="Search subjects, history..." onkeyup="filterDashboardContent()" />
+        </div>
+
+        <nav style="display: flex; gap: 0.75rem; align-items: center;">
+            <!-- Live Real-Time Clock -->
+            <div class="header-clock-box">
+                <span>🕒</span>
+                <span id="liveHeaderClock">Loading clock...</span>
+            </div>
+
+            <!-- Notification Bell Dropdown -->
+            <div class="notification-dropdown-container">
+                <button type="button" class="nav-icon-btn" id="notifDropdownTrigger" onclick="toggleNotificationDropdown()" title="System Notifications">
+                    🔔
+                    <span class="notification-badge" id="notifCount">3</span>
+                </button>
+                <div class="notification-dropdown-menu" id="notifDropdownMenu">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <strong>System Notifications</strong>
+                        <small style="color: var(--primary-color); cursor: pointer;" onclick="clearNotifications()">Mark all read</small>
+                    </div>
+                    <div id="notifItemsList">
+                        <div class="notification-item">🎉 Welcome to QuizPro v2.4 Professional Platform!</div>
+                        <div class="notification-item">📜 Certificate #CERT-894210 issued for Python Assessment.</div>
+                        <div class="notification-item">🏆 Weekly Leaderboard updated! You are currently Ranked #1.</div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="theme-toggle nav-icon-btn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme">🌓</button>
+            <div class="user-auth-widget"></div>
         </nav>
+        <button type="button" class="quizpro-mobile-toggle" id="quizproMobileToggle" aria-label="Open Mobile Menu">☰</button>
     </header>
 
-    <main class="container animate-fade-in">
-        <div class="card">
-            <h2 style="margin-bottom: 2rem;">User Dashboard</h2>
-            <div id="user-info" style="margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-color); border-radius: 8px;">
-                <!-- User info injected here -->
+    <!-- Mobile Navigation Drawer -->
+    <div class="quizpro-drawer-overlay" id="quizproDrawerOverlay"></div>
+    <aside class="quizpro-mobile-drawer" id="quizproMobileDrawer">
+        <div>
+            <div class="quizpro-drawer-header">
+                <a href="index.html" class="logo">🎓 QuizPro</a>
+                <button type="button" class="quizpro-drawer-close" id="quizproDrawerClose">&times;</button>
             </div>
-
-            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                <div class="stat-card animate-pop-in delay-100">
-                    <div id="total-attempts" style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">0</div>
-                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px;">Total Attempts</div>
-                </div>
-                <div class="stat-card animate-pop-in delay-200">
-                    <div id="highest-score" style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">0</div>
-                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px;">Highest Score</div>
-                </div>
-                <div class="stat-card animate-pop-in delay-300">
-                    <div id="avg-score" style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">0</div>
-                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px;">Avg Score</div>
-                </div>
-                <div class="stat-card animate-pop-in delay-400">
-                    <div id="best-category" style="font-size: 1.2rem; font-weight: 700; color: var(--primary-color); height: 38px; line-height: 38px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="Best Category">-</div>
-                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px;">Best Category</div>
-                </div>
-                <div class="stat-card animate-pop-in delay-500">
-                    <div id="certs-earned" style="font-size: 2rem; font-weight: 700; color: var(--success-color);">0</div>
-                    <div style="font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px;">Certificates</div>
-                </div>
-            </div>
-
-            <h3>Recent Attempts</h3>
-            <div id="history-container" style="margin-top: 1rem;">
-                <!-- History items injected here -->
-            </div>
-            
-            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
-                <a href="instructions.html" class="btn btn-primary">Take New Quiz</a>
-                <button id="delete-account-btn" class="btn btn-secondary" style="color: var(--danger-color); border-color: var(--danger-color);">Delete My Profile</button>
+            <div class="quizpro-drawer-nav">
+                <a href="dashboard.html" class="btn btn-primary">Dashboard</a>
+                <a href="leaderboard.html" class="btn btn-secondary">Leaderboard</a>
+                <a href="admin-dashboard.html" class="btn btn-secondary">Admin Panel</a>
+                <a href="index.html" class="btn btn-secondary">Home</a>
             </div>
         </div>
+    </aside>
+
+    <main class="container" style="max-width: 1200px;">
+
+        <!-- 1. COMPREHENSIVE PROFILE CARD -->
+        <section class="profile-card-pro animate-fade-in" style="animation-delay: 0.1s;">
+            <div style="position: relative;">
+                <div class="profile-avatar" id="proAvatar" style="width: 90px; height: 90px; font-size: 3rem;">👤</div>
+                <div class="badge badge-student" style="position: absolute; bottom: -5px; right: -5px; font-size: 0.65rem;">ONLINE</div>
+            </div>
+
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <h2 id="proStudentName" style="margin: 0; font-size: 1.6rem;">Alex Morgan</h2>
+                    <span class="badge badge-student" id="proRegNo">BCA2026042</span>
+                </div>
+
+                <!-- Extended Profile Information List -->
+                <div class="profile-details-list">
+                    <div><small style="color: var(--text-secondary);">Department:</small><br /><strong id="proDept">BCA</strong></div>
+                    <div><small style="color: var(--text-secondary);">Semester:</small><br /><strong id="proSemester">Semester VI</strong></div>
+                    <div><small style="color: var(--text-secondary);">College:</small><br /><strong id="proCollege">School of Computer Science</strong></div>
+                    <div><small style="color: var(--text-secondary);">Total Quizzes:</small><br /><strong id="proTotalQuizzes">0</strong></div>
+                    <div><small style="color: var(--text-secondary);">Current Rank:</small><br /><strong id="proRank" style="color: var(--warning-color);">Rank #1</strong></div>
+                    <div><small style="color: var(--text-secondary);">Joined Date:</small><br /><strong id="proJoinedDate">August 2025</strong></div>
+                </div>
+            </div>
+
+            <div style="text-align: right;">
+                <button class="btn btn-secondary" onclick="openEditProfileModal()">✏️ Edit Profile</button>
+            </div>
+        </section>
+
+        <!-- 2. QUICK ACTIONS GRID -->
+        <section class="section animate-fade-in" style="animation-delay: 0.15s;">
+            <div class="quick-actions-grid">
+                <a href="javascript:void(0)" class="quick-action-card" onclick="scrollToSubjects()">
+                    <div class="quick-action-icon">🚀</div>
+                    <strong>Take Quiz</strong>
+                </a>
+                <a href="review.html" class="quick-action-card">
+                    <div class="quick-action-icon">🔍</div>
+                    <strong>Review Answers</strong>
+                </a>
+                <a href="certificate.html" class="quick-action-card">
+                    <div class="quick-action-icon">📜</div>
+                    <strong>Certificates</strong>
+                </a>
+                <a href="leaderboard.html" class="quick-action-card">
+                    <div class="quick-action-icon">🏆</div>
+                    <strong>Leaderboard</strong>
+                </a>
+                <a href="javascript:void(0)" class="quick-action-card" onclick="openEditProfileModal()">
+                    <div class="quick-action-icon">👤</div>
+                    <strong>Profile</strong>
+                </a>
+                <a href="settings.html" class="quick-action-card">
+                    <div class="quick-action-icon">⚙️</div>
+                    <strong>Settings</strong>
+                </a>
+            </div>
+        </section>
+
+        <!-- 3. RICH 8-STATISTICS CARDS GRID -->
+        <section class="section animate-fade-in" style="animation-delay: 0.2s;">
+            <div class="stats-grid-8">
+                <div class="stat-card-pro">
+                    <div class="stat-card-icon">📝</div>
+                    <div>
+                        <div class="stat-value" id="statQuizzesPro">0</div>
+                        <div class="stat-label">Total Quizzes</div>
+                    </div>
+                </div>
+                <div class="stat-card-pro">
+                    <div class="stat-card-icon" style="color: var(--success-color);">🏆</div>
+                    <div>
+                        <div class="stat-value" id="statHighestScorePro" style="color: var(--success-color);">0%</div>
+                        <div class="stat-label">Highest Score</div>
+                    </div>
+                </div>
+                <div class="stat-card-pro">
+                    <div class="stat-card-icon" style="color: var(--primary-color);">📈</div>
+                    <div>
+                        <div class="stat-value" id="statAvgScorePro">0%</div>
+                        <div class="stat-label">Average Score</div>
+                    </div>
+                </div>
+                <div class="stat-card-pro">
+                    <div class="stat-card-icon" style="color: var(--warning-color);">📜</div>
+                    <div>
+                        <div class="stat-value" id="statCertsPro">0</div>
+                        <div class="stat-label">Certificates</div>
+                    </div>
+                </div>
+                <div class="stat-card-pro">
+                    <div class="stat-card-icon" style="color: var(--secondary-color);">🥇</div>
+                    <div>
+                        <div class="stat-value" id="statRankPro" style="color: var(--secondary-color);">#1</div>
+                        <div class="stat-label">Current Rank</div>
+                    </div>
+                </div>
+                <div class="stat-card-pro">
+                    <div class="stat-card-icon">⏱️</div>
+                    <div>
+                        <div class="stat-value" id="statTimeSpentPro">2h 45m</div>
+                        <div class="stat-label">Total Time Spent</div>
+                    </div>
+                </div>
+                <div class="stat-card-pro">
+                    <div class="stat-card-icon">🔥</div>
+                    <div>
+                        <div class="stat-value" id="statStreakPro" style="color: #f97316;">5 Days</div>
+                        <div class="stat-label">Current Streak</div>
+                    </div>
+                </div>
+                <div class="stat-card-pro">
+                    <div class="stat-card-icon">🎖️</div>
+                    <div>
+                        <div class="stat-value" id="statBadgesPro">4 Badges</div>
+                        <div class="stat-label">Badges Earned</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. DASHBOARD CHARTS SECTION -->
+        <section class="section animate-fade-in" style="animation-delay: 0.25s;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;" class="charts-2col-grid">
+                <!-- Chart 1: Performance Trend -->
+                <div class="analytics-chart-box" style="margin-bottom: 0;">
+                    <h4 style="margin-bottom: 1rem; text-align: center;">📈 Score Performance Trend</h4>
+                    <div class="canvas-container">
+                        <canvas id="trendChartCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Subject-Wise Accuracy -->
+                <div class="analytics-chart-box" style="margin-bottom: 0;">
+                    <h4 style="margin-bottom: 1rem; text-align: center;">📊 Subject-Wise Accuracy Breakdown</h4>
+                    <div class="canvas-container">
+                        <canvas id="subjectChartCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. SUBJECTS ASSESSMENT SECTION -->
+        <section id="subjectsSection" class="section animate-fade-in" style="animation-delay: 0.3s;">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h3>📚 Available Subject Examinations</h3>
+                        <p style="margin: 0; color: var(--text-secondary);">Select a subject to take a timed examination and earn certificates.</p>
+                    </div>
+                    <div class="dept-pill-group" id="dashDeptPills" style="margin-bottom: 0;">
+                        <!-- Filter pills -->
+                    </div>
+                </div>
+
+                <div class="features-grid" id="proSubjectGrid">
+                    <!-- Dynamic Subject Cards -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 6 & 7. RECENT ACTIVITY FEED + LEADERBOARD PREVIEW (2 COLUMNS) -->
+        <section class="section animate-fade-in" style="animation-delay: 0.35s;">
+            <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1.5rem;" class="dashboard-2col-grid">
+                
+                <!-- Recent Activity Feed -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1.25rem;">📜 Recent Examination Activity</h3>
+                    <div id="proActivityList">
+                        <!-- Activity items -->
+                    </div>
+                </div>
+
+                <!-- Top 5 Leaderboard Preview -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+                        🏆 Leaderboard
+                        <a href="leaderboard.html" style="font-size: 0.85rem; color: var(--primary-color);">View All →</a>
+                    </h3>
+                    <div id="proLeaderboardPreview">
+                        <!-- Top 5 rows -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. ACHIEVEMENTS & BADGES SHOWCASE -->
+        <section class="section animate-fade-in" style="animation-delay: 0.4s;">
+            <div class="card">
+                <h3 style="margin-bottom: 1.25rem;">🎖️ Student Achievements & Badges</h3>
+                <div id="proBadgesGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
+                    <div class="stat-card-pro">
+                        <div style="font-size: 2.2rem;">🥇</div>
+                        <div>
+                            <strong>Gold Badge</strong>
+                            <small style="display: block; color: var(--text-secondary);">Top 1% Score Rank</small>
+                        </div>
+                    </div>
+                    <div class="stat-card-pro">
+                        <div style="font-size: 2.2rem;">🔥</div>
+                        <div>
+                            <strong>7-Day Streak</strong>
+                            <small style="display: block; color: var(--text-secondary);">Daily active practice</small>
+                        </div>
+                    </div>
+                    <div class="stat-card-pro">
+                        <div style="font-size: 2.2rem;">⭐</div>
+                        <div>
+                            <strong>Perfect Score</strong>
+                            <small style="display: block; color: var(--text-secondary);">100% Accuracy in quiz</small>
+                        </div>
+                    </div>
+                    <div class="stat-card-pro">
+                        <div style="font-size: 2.2rem;">🎯</div>
+                        <div>
+                            <strong>Fast Solver</strong>
+                            <small style="display: block; color: var(--text-secondary);">Completed in &lt; 2 mins</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
+    <!-- 10. COMMERCIAL PLATFORM FOOTER -->
+    <footer class="footer" style="margin-top: 3rem;">
+        <div class="container text-center" style="max-width: 1200px;">
+            <p>&copy; 2026 QuizPro Online Examination Platform | <strong>Version 2.4.0 Professional Edition</strong></p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                <a href="javascript:void(0)" onclick="openHelpCenterModal()">Help Center</a> | 
+                <a href="javascript:void(0)" onclick="openPrivacyModal()">Privacy Policy</a> | 
+                <a href="index.html#contact">Contact Support</a> | 
+                <a href="admin-login.html">Admin Portal</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- MODAL: EDIT PROFILE -->
+    <div class="modal-backdrop" id="editProfileModal">
+        <div class="modal-card animate-scale-up" style="max-width: 550px;">
+            <button class="modal-close-btn" onclick="closeEditProfileModal()">&times;</button>
+            <h3 style="margin-bottom: 1.5rem;">✏️ Edit Student Profile</h3>
+
+            <form id="editProfileForm">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="editName" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Register Number</label>
+                    <input type="text" id="editRegNo" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Department</label>
+                    <select id="editDept" class="form-control" required>
+                        <option value="BCA">BCA (Bachelor of Computer Applications)</option>
+                        <option value="BSc">BSc (Computer Science / IT)</option>
+                        <option value="BCom CA">BCom CA (Computer Applications)</option>
+                        <option value="BBA">BBA (Business Administration)</option>
+                        <option value="BCom">BCom (General Commerce)</option>
+                        <option value="General">General Technical Topics</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Semester</label>
+                    <input type="text" id="editSemester" class="form-control" placeholder="e.g. Semester VI" required />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">College / Institution Name</label>
+                    <input type="text" id="editCollege" class="form-control" placeholder="e.g. School of Computer Science" required />
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary btn-block" onclick="closeEditProfileModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-block">Save Profile Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: HELP CENTER -->
+    <div class="modal-backdrop" id="helpModal">
+        <div class="modal-card animate-scale-up" style="max-width: 600px;">
+            <button class="modal-close-btn" onclick="document.getElementById('helpModal').classList.remove('active')">&times;</button>
+            <h3>❓ QuizPro Help Center & Examination Guide</h3>
+            <div style="margin-top: 1rem; color: var(--text-secondary); line-height: 1.6;">
+                <p><strong>Q: How are certificates issued?</strong><br />Certificates are automatically generated upon scoring 50%+ in any examination subject. You can view, print, or verify certificates using the embedded QR code.</p>
+                <p><strong>Q: Can I retake an exam?</strong><br />Yes! You can retake any subject assessment as many times as you like to improve your score accuracy and leaderboard rank.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PRIVACY POLICY -->
+    <div class="modal-backdrop" id="privacyModal">
+        <div class="modal-card animate-scale-up" style="max-width: 600px;">
+            <button class="modal-close-btn" onclick="document.getElementById('privacyModal').classList.remove('active')">&times;</button>
+            <h3>🔒 Privacy Policy & Data Handling</h3>
+            <p style="margin-top: 1rem; color: var(--text-secondary); line-height: 1.6;">
+                QuizPro respects your privacy. All assessment responses, certificates, and student profile records are stored securely. No personal data is shared with third parties.
+            </p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="js/storage.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/questions.js"></script>
     <script src="js/dashboard.js"></script>
-<script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
 </body>
+
 </html>

@@ -1,249 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - QuizPro</title>
+    <title>Admin Control Panel - QuizPro</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/storage.js"></script>
-    <script src="js/admin.js"></script>
-    <script>
-        // Immediately protect route
-        AdminAuth.protectRoute();
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
-<body><div class="global-loader" id="loader"><div class="spinner"></div></div>
+
+<body>
+    <div class="global-loader" id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Header Navigation -->
     <header class="animate-fade-in container">
-        <a href="#" class="logo" style="color: var(--danger-color)">🛡️ QuizPro Admin Portal</a>
-        <nav>
-            <a href="admin-questions.html" class="btn btn-secondary" style="margin-right: 10px;">Manage Questions</a>
-            <button id="clear-leaderboard" class="btn btn-secondary" style="margin-right: 10px; border-color: var(--warning-color); color: var(--warning-color);">Clear Leaderboard</button>
-            <button id="admin-logout-btn" class="btn btn-primary" style="background-color: var(--danger-color);">Logout</button>
-            <button id="theme-btn" class="theme-toggle" style="margin-left: 10px;" aria-label="Toggle Dark Theme">🌙</button>
+        <a href="index.html" class="logo">🎓 QuizPro Admin</a>
+        <nav style="display: flex; gap: 0.75rem; align-items: center;">
+            <a href="admin-dashboard.html" class="btn btn-primary">Admin Stats</a>
+            <a href="admin-questions.html" class="btn btn-secondary">Manage Questions</a>
+            <a href="dashboard.html" class="btn btn-secondary">Student Dashboard</a>
+            <button type="button" class="theme-toggle nav-icon-btn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme">🌓</button>
+            <div class="user-auth-widget"></div>
         </nav>
+        <button type="button" class="quizpro-mobile-toggle" id="quizproMobileToggle" aria-label="Open Mobile Menu">☰</button>
     </header>
 
-    <main class="container animate-fade-in">
-        <h2 style="margin-bottom: 2rem;">Platform Overview</h2>
+    <!-- Mobile Navigation Drawer -->
+    <div class="quizpro-drawer-overlay" id="quizproDrawerOverlay"></div>
+    <aside class="quizpro-mobile-drawer" id="quizproMobileDrawer">
+        <div>
+            <div class="quizpro-drawer-header">
+                <a href="index.html" class="logo">🎓 QuizPro Admin</a>
+                <button type="button" class="quizpro-drawer-close" id="quizproDrawerClose">&times;</button>
+            </div>
+            <div class="quizpro-drawer-nav">
+                <a href="admin-dashboard.html" class="btn btn-primary">Admin Stats</a>
+                <a href="admin-questions.html" class="btn btn-secondary">Manage Questions</a>
+                <a href="dashboard.html" class="btn btn-secondary">Student Dashboard</a>
+                <a href="index.html" class="btn btn-secondary">Home</a>
+            </div>
+        </div>
+    </aside>
 
-        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 3rem;">
-            <div class="stat-card" style="text-align: center; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 8px;">
-                <div id="admin-total-attempts" style="font-size: 2.5rem; font-weight: 700; color: var(--danger-color);">0</div>
-                <div style="font-size: 1rem; color: var(--text-secondary); text-transform: uppercase;">Total Quiz Attempts</div>
+    <main class="container">
+        <!-- Admin Welcome Banner -->
+        <section class="profile-banner animate-fade-in" style="background: linear-gradient(135deg, #f43f5e 0%, #6366f1 100%); color: white; display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem; padding: 1.75rem; border-radius: 16px; margin-bottom: 2rem;">
+            <div class="profile-avatar" style="background: rgba(255,255,255,0.2); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem;">⚙️</div>
+            <div style="flex: 1; min-width: 240px;">
+                <h2 style="color: white; margin-bottom: 0.25rem;">System Administration Portal</h2>
+                <p style="margin: 0; opacity: 0.9; color: white;">Manage student accounts, quiz question bank, departments, and examination results.</p>
             </div>
-            <div class="stat-card" style="text-align: center; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 8px;">
-                <div id="admin-unique-users" style="font-size: 2.5rem; font-weight: 700; color: var(--danger-color);">0</div>
-                <div style="font-size: 1rem; color: var(--text-secondary); text-transform: uppercase;">Unique Students</div>
+            <div>
+                <a href="admin-questions.html" class="btn btn-secondary" style="background: white; color: var(--primary-color); border: none;">+ Manage Questions</a>
             </div>
-            <div class="stat-card" style="text-align: center; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 8px;">
-                <div id="admin-avg-score" style="font-size: 2.5rem; font-weight: 700; color: var(--danger-color);">0</div>
-                <div style="font-size: 1rem; color: var(--text-secondary); text-transform: uppercase;">Global Avg Score</div>
-            </div>
-        </div>
+        </section>
 
-        <!-- Charts Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
-            <div class="card" style="padding: 1rem;"><canvas id="chart-activity"></canvas></div>
-            <div class="card" style="padding: 1rem;"><canvas id="chart-category"></canvas></div>
-        </div>
+        <!-- Stats Counter -->
+        <section class="section animate-fade-in" style="margin-bottom: 2rem;">
+            <div class="stats-counter-grid stats-grid-8">
+                <div class="stat-card">
+                    <div class="stat-value" id="admTotalUsers">0</div>
+                    <div class="stat-label">Registered Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="admTotalQuizzes" style="color: var(--secondary-color);">0</div>
+                    <div class="stat-label">Total Attempts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="admTotalQuestions" style="color: var(--success-color);">0</div>
+                    <div class="stat-label">Active Questions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="admPassRate" style="color: var(--warning-color);">0%</div>
+                    <div class="stat-label">Average Pass Rate</div>
+                </div>
+            </div>
+        </section>
 
-        <h3>All Student Attempts</h3>
-        <div class="card" style="margin-bottom: 1rem; padding: 1rem; display: flex; gap: 1rem; align-items: flex-end;">
-            <div style="flex: 2;">
-                <label class="form-label">Search Students</label>
-                <input type="text" id="admin-search" class="form-control" placeholder="Search by name or reg number...">
+        <!-- Registered Users Table -->
+        <section class="section animate-fade-in" style="margin-bottom: 2rem;">
+            <div class="card">
+                <h3 style="margin-bottom: 1.5rem;">👥 Registered Platform Users</h3>
+                <div id="admUsersList" class="table-responsive">
+                    <!-- User items -->
+                </div>
             </div>
-            <div style="flex: 1;">
-                <label class="form-label">Sort By</label>
-                <select id="admin-sort" class="form-control">
-                    <option value="date-desc">Date (Newest First)</option>
-                    <option value="date-asc">Date (Oldest First)</option>
-                    <option value="score-desc">Score (Highest First)</option>
-                    <option value="score-asc">Score (Lowest First)</option>
-                </select>
-            </div>
-        </div>
-        <div class="card" style="margin-top: 1rem; padding: 0; overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
-                <thead style="background-color: rgba(0,0,0,0.05);">
-                    <tr>
-                        <th style="padding: 1rem; border-bottom: 2px solid var(--border-color);">Date</th>
-                        <th style="padding: 1rem; border-bottom: 2px solid var(--border-color);">Name (Reg No)</th>
-                        <th style="padding: 1rem; border-bottom: 2px solid var(--border-color);">Category (Diff)</th>
-                        <th style="padding: 1rem; border-bottom: 2px solid var(--border-color);">Score</th>
-                        <th style="padding: 1rem; border-bottom: 2px solid var(--border-color);">Time Taken</th>
-                        <th style="padding: 1rem; border-bottom: 2px solid var(--border-color); text-align: right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-history-body">
-                    <!-- History rows injected here -->
-                </tbody>
-            </table>
-        </div>
+        </section>
     </main>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            StorageHelper.applyTheme();
-            const themeBtn = document.getElementById('theme-btn');
-            themeBtn.textContent = StorageHelper.getSettings().theme === 'dark' ? '☀️' : '🌙';
-            themeBtn.addEventListener('click', () => {
-                themeBtn.textContent = StorageHelper.toggleTheme() === 'dark' ? '☀️' : '🌙';
-            });
+    <footer class="footer">
+        <div class="container text-center">
+            <p>&copy; 2026 QuizPro - BCA Final Year Examination System Admin Portal</p>
+        </div>
+    </footer>
 
-            // Load Global Data
-            let history = StorageHelper.getHistory();
-            
-            let activityChart = null;
-            let categoryChart = null;
-
-            function updateStats() {
-                document.getElementById('admin-total-attempts').textContent = history.length;
-                const uniqueUsers = new Set(history.map(h => h.user.regNumber)).size;
-                document.getElementById('admin-unique-users').textContent = uniqueUsers;
-                if (history.length > 0) {
-                    const totalScore = history.reduce((acc, h) => acc + h.score, 0);
-                    document.getElementById('admin-avg-score').textContent = (totalScore / history.length).toFixed(1);
-                } else {
-                    document.getElementById('admin-avg-score').textContent = '0';
-                }
-                renderCharts();
-            }
-
-            function renderCharts() {
-                if (activityChart) activityChart.destroy();
-                if (categoryChart) categoryChart.destroy();
-                
-                if (history.length === 0) return;
-
-                // 1. Activity (Attempts by Date)
-                const dateCounts = {};
-                history.forEach(h => {
-                    const d = new Date(h.date).toLocaleDateString();
-                    dateCounts[d] = (dateCounts[d] || 0) + 1;
-                });
-                const dates = Object.keys(dateCounts).slice(-7);
-                const counts = dates.map(d => dateCounts[d]);
-
-                activityChart = new Chart(document.getElementById('chart-activity'), {
-                    type: 'line',
-                    data: {
-                        labels: dates,
-                        datasets: [{
-                            label: 'Attempts per Day',
-                            data: counts,
-                            borderColor: '#4f46e5',
-                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                            fill: true,
-                            tension: 0.3
-                        }]
-                    },
-                    options: { plugins: { title: { display: true, text: 'Activity Timeline' } } }
-                });
-
-                // 2. Category Performance
-                const catStats = {};
-                history.forEach(h => {
-                    if (!catStats[h.category]) catStats[h.category] = { sum: 0, count: 0 };
-                    catStats[h.category].sum += h.score;
-                    catStats[h.category].count++;
-                });
-                const cats = Object.keys(catStats);
-                const avgs = cats.map(c => catStats[c].sum / catStats[c].count);
-
-                categoryChart = new Chart(document.getElementById('chart-category'), {
-                    type: 'bar',
-                    data: {
-                        labels: cats,
-                        datasets: [{
-                            label: 'Avg Score',
-                            data: avgs,
-                            backgroundColor: ['#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
-                        }]
-                    },
-                    options: { plugins: { title: { display: true, text: 'Category Performance' } } }
-                });
-            }
-
-            const tbody = document.getElementById('admin-history-body');
-            const searchInput = document.getElementById('admin-search');
-            const sortSelect = document.getElementById('admin-sort');
-
-            function renderTable() {
-                tbody.innerHTML = '';
-                let displayData = [...history];
-
-                // Filter
-                const query = searchInput.value.toLowerCase();
-                if (query) {
-                    displayData = displayData.filter(h => 
-                        h.user.name.toLowerCase().includes(query) || 
-                        h.user.regNumber.toLowerCase().includes(query)
-                    );
-                }
-
-                // Sort
-                const sortType = sortSelect.value;
-                displayData.sort((a, b) => {
-                    if (sortType === 'date-desc') return new Date(b.date) - new Date(a.date);
-                    if (sortType === 'date-asc') return new Date(a.date) - new Date(b.date);
-                    if (sortType === 'score-desc') return b.score - a.score;
-                    if (sortType === 'score-asc') return a.score - b.score;
-                });
-
-                if (displayData.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No matching attempts found.</td></tr>';
-                    return;
-                }
-                
-                displayData.forEach((h, index) => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'animate-fade-in';
-                    tr.style.animationDelay = `${index * 0.05}s`;
-                    tr.style.borderBottom = '1px solid var(--border-color)';
-                    
-                    tr.innerHTML = `
-                        <td style="padding: 1rem;">${new Date(h.date).toLocaleString()}</td>
-                        <td style="padding: 1rem;"><strong>${h.user.name}</strong><br><small style="color: var(--text-secondary)">${h.user.regNumber}</small></td>
-                        <td style="padding: 1rem;">${h.category}<br><small style="color: var(--text-secondary)">${h.difficulty}</small></td>
-                        <td style="padding: 1rem; font-weight: bold; color: ${h.score >= 6 ? 'var(--success-color)' : 'var(--danger-color)'}">${h.score}/${h.total}</td>
-                        <td style="padding: 1rem;">${h.totalTimeTaken}s</td>
-                        <td style="padding: 1rem; text-align: right;">
-                            <button class="btn btn-secondary action-btn del-record-btn" data-date="${h.date}" style="color: var(--danger-color); border-color: var(--danger-color); padding: 5px 10px; font-size: 0.8rem;">Delete</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                document.querySelectorAll('.del-record-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        if (confirm('Delete this record permanently?')) {
-                            const dateId = e.target.dataset.date;
-                            history = history.filter(h => h.date !== dateId);
-                            localStorage.setItem('quizHistory', JSON.stringify(history));
-                            updateStats();
-                            renderTable();
-                        }
-                    });
-                });
-            }
-
-            searchInput.addEventListener('input', renderTable);
-            sortSelect.addEventListener('change', renderTable);
-
-            updateStats();
-            renderTable();
-
-            // Clear Leaderboard feature
-            document.getElementById('clear-leaderboard').addEventListener('click', () => {
-                if(confirm('Are you sure you want to completely wipe the Global Leaderboard?')) {
-                    localStorage.removeItem('quizLeaderboard');
-                    alert('Leaderboard cleared successfully.');
-                }
-            });
-        });
-    </script>
-<script>window.addEventListener('load', () => { setTimeout(() => document.getElementById('loader')?.classList.add('loader-hidden'), 300); });</script>
+    <!-- Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/questions.js"></script>
+    <script src="js/admin.js"></script>
 </body>
+
 </html>

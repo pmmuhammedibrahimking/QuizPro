@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verified Certificate of Achievement - QuizPro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/result.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+
+<body>
+    <div class="global-loader" id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="animate-fade-in container no-print">
+        <a href="index.html" class="logo">🎓 QuizPro</a>
+        <nav style="display: flex; gap: 0.75rem; align-items: center;">
+            <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save PDF</button>
+        </nav>
+        <button type="button" class="quizpro-mobile-toggle" id="quizproMobileToggle" aria-label="Open Mobile Menu">☰</button>
+    </header>
+
+    <!-- Mobile Navigation Drawer -->
+    <div class="quizpro-drawer-overlay" id="quizproDrawerOverlay"></div>
+    <aside class="quizpro-mobile-drawer" id="quizproMobileDrawer">
+        <div>
+            <div class="quizpro-drawer-header">
+                <a href="index.html" class="logo">🎓 QuizPro</a>
+                <button type="button" class="quizpro-drawer-close" id="quizproDrawerClose">&times;</button>
+            </div>
+            <div class="quizpro-drawer-nav">
+                <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
+                <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save PDF</button>
+                <a href="index.html" class="btn btn-secondary">Home</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="container" style="max-width: 900px; padding: 0 0.5rem;">
+        <!-- CERTIFICATE CONTAINER -->
+        <div class="certificate animate-scale-up" id="certificate-container" style="width: 100%; box-sizing: border-box;">
+            <div class="cert-frame">
+                <!-- Corner Accents -->
+                <div class="cert-corner cert-corner-tl"></div>
+                <div class="cert-corner cert-corner-tr"></div>
+                <div class="cert-corner cert-corner-bl"></div>
+                <div class="cert-corner cert-corner-br"></div>
+
+                <!-- Header -->
+                <div class="cert-header">
+                    <div class="cert-logo">🎓 QUIZPRO ACADEMY</div>
+                    <div class="cert-title">Certificate of Achievement</div>
+                    <div class="cert-subtitle">This is proudly presented to</div>
+                </div>
+
+                <!-- Recipient Name -->
+                <div class="cert-recipient">
+                    <div class="cert-name-text" id="certStudentName">Alex Morgan</div>
+                    <div class="cert-name-line"></div>
+                </div>
+
+                <!-- Body Details -->
+                <div class="cert-body">
+                    <p class="cert-course-line">
+                        For successfully completing the official assessment in <strong id="certSubject">Python Programming</strong>
+                    </p>
+
+                    <div class="cert-details-grid">
+                        <div class="cert-detail-item">
+                            <span class="cert-label">Department:</span> <span id="certDept">BCA</span>
+                        </div>
+                        <div class="cert-detail-item">
+                            <span class="cert-label">Register Number:</span> <span id="certRegNo">BCA2026042</span>
+                        </div>
+                        <div class="cert-detail-item">
+                            <span class="cert-label">Scored Percentage:</span> <span id="certPercentage">90%</span>
+                        </div>
+                        <div class="cert-detail-item">
+                            <span class="cert-label">Grade Awarded:</span> <span class="grade-pill" id="certGrade">A+</span>
+                        </div>
+                        <div class="cert-detail-item">
+                            <span class="cert-label">Issue Date:</span> <span id="certDate">September 10, 2026</span>
+                        </div>
+                        <div class="cert-detail-item">
+                            <span class="cert-label">Certificate ID:</span> <span id="certId">CERT-894210</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Signatures & QR Code -->
+                <div class="cert-footer cert-footer-grid" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; margin-top: 2rem;">
+                    <div class="cert-seal-box">
+                        <div class="cert-gold-seal">
+                            <div class="seal-inner">
+                                <div class="seal-star">★</div>
+                                <div class="seal-text">VERIFIED</div>
+                            </div>
+                        </div>
+                        <div class="cert-seal-label">
+                            <strong>Official Verification</strong><br />
+                            QuizPro Examination Board
+                        </div>
+                    </div>
+
+                    <!-- QR Code Container -->
+                    <div style="text-align: center;">
+                        <div id="qrCodeContainer" style="background: white; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; display: inline-block;">
+                            <!-- QR SVG generated via JS -->
+                        </div>
+                        <div style="font-size: 0.65rem; color: #64748b; margin-top: 4px;">Scan to Verify</div>
+                    </div>
+
+                    <div class="cert-signature-box">
+                        <div class="signature-line">Prof. E. Johnson</div>
+                        <div class="signature-label">Academic Controller</div>
+                        <div class="signature-sublabel">QuizPro Examination Committee</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center no-print" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-large" onclick="window.print()">🖨️ Download / Print Certificate PDF</button>
+            <a href="dashboard.html" class="btn btn-secondary btn-large">Back to Dashboard</a>
+        </div>
+    </main>
+
+    <script src="js/storage.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/certificate.js"></script>
+</body>
+
+</html>

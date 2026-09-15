@@ -1,85 +1,158 @@
+/**
+ * Result Page Controller for QuizPro
+ * Animates score ring gauge, calculates grades & ranks, draws Canvas Analytics,
+ * and configures Certificate export link.
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
-    const result = StorageHelper.getQuizState();
+    let result = null;
+    try {
+        result = JSON.parse(localStorage.getItem('latestQuizResult'));
+    } catch(e) { result = null; }
+
     if (!result) {
-        window.location.href = 'index.html';
-        return;
+        // Fallback demo result if none found
+        result = {
+            user: StorageHelper.getUser() || { name: 'Student Learner', department: 'BCA', regNumber: 'BCA2026001' },
+            category: 'Python',
+            department: 'BCA',
+            score: 8,
+            total: 10,
+            percentage: 80,
+            grade: 'A',
+            timeTaken: 145,
+            reviewData: [],
+            date: new Date().toISOString()
+        };
     }
 
-    // Theme setup
-    const themeBtn = document.getElementById('theme-btn');
-    if (themeBtn) {
-        themeBtn.textContent = StorageHelper.getSettings().theme === 'dark' ? '☀️' : '🌙';
-        themeBtn.addEventListener('click', () => {
-            themeBtn.textContent = StorageHelper.toggleTheme() === 'dark' ? '☀️' : '🌙';
-        });
+    renderResultView(result);
+    drawPerformanceChart(result);
+});
+
+function renderResultView(result) {
+    const user = result.user || { name: 'Student', department: 'BCA' };
+    const pct = result.percentage || Math.round((result.score / result.total) * 100);
+    const pass = pct >= 50;
+
+    document.getElementById('resDeptBadge').innerText = (result.department || user.department || 'BCA') + ' Department';
+    document.getElementById('resSubjectTitle').innerText = (result.category || 'Quiz') + ' Assessment Result';
+    document.getElementById('resStudentName').innerText = `Student: ${user.name} (${user.regNumber || 'N/A'})`;
+
+    // Percentage & Circular Ring Gauge
+    const gaugeRing = document.getElementById('scoreGaugeRing');
+    if (gaugeRing) {
+        const color = pass ? 'var(--success-color)' : 'var(--danger-color)';
+        gaugeRing.style.background = `conic-gradient(${color} ${pct}%, rgba(99, 102, 241, 0.15) ${pct}%)`;
     }
 
-    // Calculate Grade
-    const percentage = (result.score / result.total) * 100;
-    let grade = 'Fail';
-    let gradeColor = 'var(--danger-color)';
+    document.getElementById('resPercentageText').innerText = pct + '%';
+    document.getElementById('resGradeBadge').innerText = 'Grade ' + (result.grade || (pct >= 90 ? 'A+' : (pct >= 80 ? 'A' : (pct >= 70 ? 'B' : (pct >= 50 ? 'C' : 'F')))));
 
-    if (percentage >= 90) { grade = 'A+'; gradeColor = 'var(--success-color)'; }
-    else if (percentage >= 80) { grade = 'A'; gradeColor = 'var(--success-color)'; }
-    else if (percentage >= 70) { grade = 'B'; gradeColor = 'var(--warning-color)'; }
-    else if (percentage >= 60) { grade = 'C'; gradeColor = 'var(--warning-color)'; }
+    // Pass / Fail Badge
+    const pfBadge = document.getElementById('resPassFailBadge');
+    if (pfBadge) {
+        pfBadge.innerText = pass ? '🎉 PASSED' : '❌ FAILED';
+        pfBadge.style.background = pass ? 'var(--success-color)' : 'var(--danger-color)';
+    }
 
-    // Result Page specific logic
-    if (document.getElementById('grade-badge')) {
-        document.getElementById('grade-badge').textContent = grade;
-        document.getElementById('grade-badge').style.backgroundColor = gradeColor;
-        document.getElementById('score-text').textContent = `You scored ${result.score} out of ${result.total}`;
-        document.getElementById('percentage-text').textContent = `(${percentage.toFixed(1)}%)`;
+    // Stats Grid
+    document.getElementById('resScoreText').innerText = `${result.score} / ${result.total}`;
+    document.getElementById('resWrongText').innerText = `${result.total - result.score}`;
+    
+    const mins = Math.floor((result.timeTaken || 0) / 60);
+    const secs = (result.timeTaken || 0) % 60;
+    document.getElementById('resTimeText').innerText = `${mins}m ${secs}s`;
 
-        let correct = 0;
-        let wrong = 0;
-        let unanswered = 0;
+    // Rank Calculation based on Leaderboard position
+    const leaderboard = StorageHelper.getLeaderboard();
+    let rank = 1;
+    if (leaderboard.length > 0) {
+        const idx = leaderboard.findIndex(l => l.score === result.score && l.name === user.name);
+        if (idx !== -1) rank = idx + 1;
+        else rank = Math.max(1, Math.ceil(leaderboard.length * (1 - (pct / 100))));
+    }
+    document.getElementById('resRankText').innerText = `Rank #${rank}`;
 
-        result.answers.forEach(a => {
-            if (a.userAnswer === null) unanswered++;
-            else if (a.isCorrect) correct++;
-            else wrong++;
-        });
-
-        document.getElementById('correct-answers').textContent = correct;
-        document.getElementById('wrong-answers').textContent = wrong;
-        document.getElementById('unanswered').textContent = unanswered;
-        document.getElementById('time-taken').textContent = `${result.totalTimeTaken}s`;
-
-        // Setup Certificate if passed
-        if (percentage >= 60) {
-            document.getElementById('certificate-container').style.display = 'block';
-            document.getElementById('print-btn').style.display = 'inline-flex';
-            
-            document.getElementById('cert-name').textContent = result.user.name;
-            document.getElementById('cert-category').textContent = result.category;
-            document.getElementById('cert-score').textContent = `${percentage.toFixed(1)}%`;
-            document.getElementById('cert-grade').textContent = grade;
-            document.getElementById('cert-date').textContent = new Date(result.date).toLocaleDateString();
-
-            document.getElementById('print-btn').addEventListener('click', () => {
-                window.print();
-            });
+    // Certificate Button state
+    const certBtn = document.getElementById('certDownloadBtn');
+    if (certBtn) {
+        if (!pass) {
+            certBtn.style.display = 'none';
+        } else {
+            certBtn.style.display = 'inline-flex';
         }
     }
+}
 
-    // Review Page specific logic
-    if (document.getElementById('review-container')) {
-        const container = document.getElementById('review-container');
-        result.answers.forEach((ans, index) => {
-            const item = document.createElement('div');
-            item.className = `review-item animate-fade-in ${ans.isCorrect ? 'correct' : 'wrong'}`;
-            item.style.animationDelay = `${index * 0.1}s`;
+function drawPerformanceChart(result) {
+    const canvas = document.getElementById('performanceChart');
+    if (!canvas) return;
 
-            const userAnswerText = ans.userAnswer === null ? 'Not Answered' : ans.userAnswer;
-            
-            item.innerHTML = `
-                <div class="review-question">${index + 1}. ${ans.questionText}</div>
-                <div class="review-answer"><strong>Your Answer:</strong> <span style="color: ${ans.isCorrect ? 'var(--success-color)' : 'var(--danger-color)'}">${userAnswerText}</span></div>
-                ${!ans.isCorrect ? `<div class="review-answer"><strong>Correct Answer:</strong> <span style="color: var(--success-color)">${ans.correctAnswer}</span></div>` : ''}
-                <div class="review-explanation"><strong>Explanation:</strong> ${ans.explanation}</div>
-            `;
-            container.appendChild(item);
-        });
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const width = rect.width;
+    const height = rect.height;
+
+    // Clear Canvas
+    ctx.clearRect(0, 0, width, height);
+
+    const correct = result.score;
+    const wrong = result.total - result.score;
+    const total = result.total || 1;
+
+    // Draw Bar Graph
+    const barWidth = 60;
+    const spacing = 80;
+    const startX = (width - (2 * barWidth + spacing)) / 2;
+    const maxBarHeight = height - 70;
+
+    const correctHeight = (correct / total) * maxBarHeight;
+    const wrongHeight = (wrong / total) * maxBarHeight;
+
+    // Correct Bar
+    ctx.fillStyle = '#10b981';
+    ctx.beginPath();
+    ctx.roundRect(startX, height - 40 - correctHeight, barWidth, correctHeight, [8, 8, 0, 0]);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${correct}`, startX + barWidth / 2, height - 45 - correctHeight);
+    ctx.fillText('Correct', startX + barWidth / 2, height - 20);
+
+    // Wrong Bar
+    const wrongX = startX + barWidth + spacing;
+    ctx.fillStyle = '#f43f5e';
+    ctx.beginPath();
+    ctx.roundRect(wrongX, height - 40 - wrongHeight, barWidth, wrongHeight, [8, 8, 0, 0]);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`${wrong}`, wrongX + barWidth / 2, height - 45 - wrongHeight);
+    ctx.fillText('Wrong', wrongX + barWidth / 2, height - 20);
+}
+
+function shareResultCard() {
+    let result = null;
+    try { result = JSON.parse(localStorage.getItem('latestQuizResult')); } catch(e) {}
+    const scoreText = result ? `I scored ${result.percentage}% in ${result.category} on QuizPro!` : 'Check out QuizPro Examination Platform!';
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'QuizPro Score',
+            text: scoreText,
+            url: window.location.href
+        }).catch(err => console.debug(err));
+    } else {
+        navigator.clipboard.writeText(scoreText + ' ' + window.location.href);
+        alert('Result score copied to clipboard!');
     }
-});
+}

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusPulse - Next-Gen Responsive Innovation & Analytics Platform</title>
+    <meta name="description" content="A state-of-the-art fully responsive web application built with glassmorphism design, liquid media queries, interactive analytics, and dark mode support.">
+    <meta name="keywords" content="responsive web design, glassmorphism, dashboard, web app, interactive modules, dark mode">
+    <meta name="author" content="NexusPulse Team">
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                ⚡ NexusPulse <span class="logo-badge">PRO</span>
+            </a>
+
+            <!-- Desktop Navigation Links -->
+            <ul class="nav-menu">
+                <li><a href="#hero" class="nav-link active">Home</a></li>
+                <li><a href="#stats" class="nav-link">Analytics</a></li>
+                <li><a href="#modules" class="nav-link">Modules</a></li>
+                <li><a href="#activity" class="nav-link">Activity Log</a></li>
+            </ul>
+
+            <!-- Header Actions -->
+            <div class="nav-actions">
+                <button type="button" class="theme-toggle-btn btn-icon-only" aria-label="Toggle Light/Dark Theme">🌙</button>
+                <button type="button" class="btn btn-primary" onclick="alert('Welcome to NexusPulse! Signed in as Demo User.')">Get Started</button>
+                
+                <!-- Mobile Hamburger Toggle -->
+                <button type="button" class="mobile-toggle" id="mobileToggleBtn" aria-label="Toggle Mobile Menu">
+                    <svg viewBox="0 0 24 24">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Off-Canvas Drawer -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <aside class="mobile-drawer" id="mobileDrawer" aria-label="Mobile Navigation">
+        <div>
+            <div class="drawer-header">
+                <a href="index.html" class="logo">⚡ NexusPulse</a>
+                <button type="button" class="drawer-close-btn" id="drawerCloseBtn">&times;</button>
+            </div>
+            <ul class="drawer-menu">
+                <li><a href="#hero" class="nav-link">Home</a></li>
+                <li><a href="#stats" class="nav-link">Analytics</a></li>
+                <li><a href="#modules" class="nav-link">Modules</a></li>
+                <li><a href="#activity" class="nav-link">Activity Log</a></li>
+            </ul>
+        </div>
+        <div style="margin-top: 2rem;">
+            <button type="button" class="btn btn-primary" style="width: 100%;" onclick="alert('Accessing NexusPulse Mobile Portal!')">Launch Mobile App</button>
+        </div>
+    </aside>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero" class="hero-section">
+            <div class="container hero-grid">
+                <div>
+                    <div class="hero-badge">🚀 Next-Gen Responsive Platform</div>
+                    <h1 class="hero-title">Empower Innovation with <span>Liquid Architecture</span></h1>
+                    <p class="hero-desc">NexusPulse provides adaptive user interfaces, real-time analytics dashboards, and glassmorphism styling that scales effortlessly from mobile phones to 4K displays.</p>
+                    <div class="hero-cta">
+                        <a href="#modules" class="btn btn-primary">Explore Interactive Modules</a>
+                        <a href="#activity" class="btn btn-secondary">View Live Benchmarks</a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="pulse-ring"></div>
+                    <div class="hero-graphic-card">
+                        <div style="font-size: 4rem; margin-bottom: 0.5rem;">⚡</div>
+                        <h3 style="margin-bottom: 0.5rem;">Fluid UI Engine</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Adaptive grid layouts, dark mode switching, and real-time event filtering.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Statistics Counter -->
+        <section id="stats" class="container">
+            <div class="stats-grid card">
+                <div class="stat-box">
+                    <div class="stat-number" data-target="99" data-suffix="%">0%</div>
+                    <div class="stat-label">System Uptime</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" data-target="150" data-suffix="k+">0k+</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" data-target="48" data-suffix="ms">0ms</div>
+                    <div class="stat-label">Avg Response Time</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" data-target="100" data-suffix="%">0%</div>
+                    <div class="stat-label">Responsive Accuracy</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Filterable Modules Explorer -->
+        <section id="modules" class="filter-section container">
+            <div class="section-header">
+                <h2>Interactive Knowledge Modules</h2>
+                <p class="section-subtitle">Filter by subject category or search live across all available tech modules.</p>
+            </div>
+
+            <!-- Filter Controls & Search -->
+            <div class="filter-bar">
+                <div class="pills-group" id="categoryPills">
+                    <button type="button" class="pill-btn active" data-category="all">All Topics</button>
+                    <button type="button" class="pill-btn" data-category="ai">Artificial Intelligence</button>
+                    <button type="button" class="pill-btn" data-category="web">Web Development</button>
+                    <button type="button" class="pill-btn" data-category="cloud">Cloud Systems</button>
+                    <button type="button" class="pill-btn" data-category="cyber">Cyber Security</button>
+                </div>
+
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="moduleSearchInput" class="search-input" placeholder="Search modules..." />
+                </div>
+            </div>
+
+            <!-- Dynamic Responsive Cards Grid -->
+            <div class="cards-grid" id="modulesGrid">
+                <!-- Dynamically populated via app.js -->
+            </div>
+        </section>
+
+        <!-- Live Activity Analytics Table -->
+        <section id="activity" class="table-section container">
+            <div class="section-header">
+                <h2>Live System Activity & Benchmarks</h2>
+                <p class="section-subtitle">Real-time status updates and execution metrics across active cluster workloads.</p>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Module ID</th>
+                            <th>Workload Name</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Benchmark Score</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityTableBody">
+                        <!-- Dynamically populated via app.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Interactive Modal Container -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Module Details</h3>
+                <button type="button" class="modal-close" id="modalCloseBtn">&times;</button>
+            </div>
+            <div id="modalBody">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <a href="index.html" class="logo" style="margin-bottom: 1rem; display: inline-flex;">⚡ NexusPulse</a>
+                    <p style="font-size: 0.9rem; max-width: 320px; margin-bottom: 1rem;">State-of-the-art responsive web application with glassmorphism UI and fluid cross-device adaptability.</p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">&copy; 2026 NexusPulse Technologies Inc. All rights reserved.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Platform</h4>
+                    <ul class="footer-links">
+                        <li><a href="#hero">Overview</a></li>
+                        <li><a href="#modules">Interactive Modules</a></li>
+                        <li><a href="#stats">Analytics Engine</a></li>
+                        <li><a href="#activity">Live Benchmarks</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">API Specifications</a></li>
+                        <li><a href="#">UI Design Tokens</a></li>
+                        <li><a href="#">System Status</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                Built with ❤️ using Vanilla HTML5, CSS Glassmorphism & ES6 JavaScript. Fully responsive across all devices.
+            </div>
+        </div>
+    </footer>
+
+    <!-- JS Scripts -->
+    <script src="js/theme.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
