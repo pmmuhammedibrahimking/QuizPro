@@ -8,19 +8,37 @@
 let currentDashDept = 'BCA';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    let user = StorageHelper.getUser();
-    if (!user) {
-        window.location.href = 'index.html';
-        return;
-    }
+    try {
+        let user = StorageHelper.getUser();
+        if (!user) {
+            if (typeof AuthManager !== 'undefined' && AuthManager.getCurrentUser()) {
+                user = AuthManager.getCurrentUser();
+            }
+        }
 
-    initLiveClock();
-    renderProStudentProfile(user);
-    setupEditProfileForm();
-    await loadProDashboardStats();
-    renderProDepartmentPills(user.department || 'BCA');
-    renderProSubjects(user.department || 'BCA');
-    renderProLeaderboardPreview();
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        try { initLiveClock(); } catch (e) { console.warn('Clock init error:', e); }
+        try { renderProStudentProfile(user); } catch (e) { console.warn('Profile render error:', e); }
+        try { setupEditProfileForm(); } catch (e) { console.warn('Edit profile form error:', e); }
+        
+        try {
+            await loadProDashboardStats();
+        } catch (e) {
+            console.warn('Dashboard stats load error:', e);
+        }
+
+        try { renderProDepartmentPills(user.department || 'BCA'); } catch (e) { console.warn('Pills render error:', e); }
+        try { renderProSubjects(user.department || 'BCA'); } catch (e) { console.warn('Subjects render error:', e); }
+        try { renderProLeaderboardPreview(); } catch (e) { console.warn('Leaderboard preview error:', e); }
+    } catch (err) {
+        console.error('Dashboard initialization error:', err);
+    } finally {
+        hideGlobalLoader();
+    }
 });
 
 // 1. Live Header Real-Time Clock
@@ -86,6 +104,8 @@ function renderProStudentProfile(user) {
     const totalQ = document.getElementById('proTotalQuizzes');
     const rank = document.getElementById('proRank');
     const joined = document.getElementById('proJoinedDate');
+    const sideName = document.getElementById('sidebarNavName');
+    const sideDept = document.getElementById('sidebarNavDept');
 
     if (avatar) avatar.innerText = user.name ? user.name.charAt(0).toUpperCase() : '👤';
     if (name) name.innerText = user.name || 'Alex Morgan';
@@ -94,6 +114,8 @@ function renderProStudentProfile(user) {
     if (sem) sem.innerText = user.semester || 'Semester VI';
     if (college) college.innerText = user.college || 'School of Computer Science';
     if (joined) joined.innerText = user.joinedDate || 'August 2025';
+    if (sideName) sideName.innerText = user.name || 'Student Portal';
+    if (sideDept) sideDept.innerText = (user.department || 'BCA') + ' Examination';
 
     const history = StorageHelper.getHistory();
     if (totalQ) totalQ.innerText = history.length;
@@ -302,7 +324,11 @@ function drawSubjectAccuracyChart(history) {
 
         ctx.fillStyle = sub.color;
         ctx.beginPath();
-        ctx.roundRect(x, height - 35 - barH, barWidth, barH, [6, 6, 0, 0]);
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(x, height - 35 - barH, barWidth, barH, [6, 6, 0, 0]);
+        } else {
+            ctx.rect(x, height - 35 - barH, barWidth, barH);
+        }
         ctx.fill();
 
         ctx.fillStyle = '#ffffff';
@@ -340,26 +366,16 @@ function renderProSubjects(dept) {
 
     const subjects = DepartmentSubjects[dept] || DepartmentSubjects['BCA'];
     grid.innerHTML = subjects.map((sub, idx) => {
-        const qCount = defaultQuizQuestions[sub] ? defaultQuizQuestions[sub].length : 5;
         const diff = idx % 3 === 0 ? 'Easy' : (idx % 3 === 1 ? 'Medium' : 'Hard');
         const diffBadge = diff === 'Easy' ? 'badge-student' : (diff === 'Hard' ? 'badge-admin' : 'badge-guest');
-        const completionPct = 50 + (idx * 15) % 50;
 
         return `
             <div class="feature-card animate-scale-up">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
                     <div class="feature-icon">📚</div>
                     <span class="badge ${diffBadge}">${diff}</span>
                 </div>
                 <h3>${sub}</h3>
-                <small style="color: var(--text-secondary);">${qCount}+ Questions Available</small>
-                
-                <!-- Completion Progress Bar -->
-                <div class="subject-progress-bar">
-                    <div class="subject-progress-fill" style="width: ${completionPct}%;"></div>
-                </div>
-                <small style="color: var(--text-secondary);">${completionPct}% Course Mastered</small>
-
                 <button class="btn btn-primary btn-sm btn-block" style="margin-top: 1rem;" onclick="startQuizSubject('${sub}', '${dept}')">Start Assessment</button>
             </div>
         `;
@@ -453,11 +469,20 @@ function filterDashboardContent() {
 }
 
 function openHelpCenterModal() {
-    document.getElementById('helpModal').classList.add('active');
+    openModal('helpModal');
 }
 
 function openPrivacyModal() {
-    document.getElementById('privacyModal').classList.add('active');
+    openModal('privacyModal');
+}
+
+function closePrivacyModal() {
+    closeModal('privacyModal');
+}
+
+function acknowledgePrivacyPolicy() {
+    StorageHelper.acknowledgePrivacy();
+    closePrivacyModal();
 }
 
 function viewQuizAttemptResult(encodedItem) {

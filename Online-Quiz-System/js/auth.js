@@ -327,7 +327,101 @@ const AuthManager = {
             }
         });
 
+        this.renderMobileDrawer();
         this.bindEvents();
+    },
+
+    renderMobileDrawer: function () {
+        const drawer = document.getElementById('quizproMobileDrawer');
+        if (!drawer) return;
+
+        const user = this.getCurrentUser();
+        const pagePath = window.location.pathname.split('/').pop() || 'index.html';
+        const isDashboard = pagePath === 'dashboard.html';
+        const isLeaderboard = pagePath === 'leaderboard.html';
+        const isCertificate = pagePath === 'certificate.html';
+        const isSettings = pagePath === 'settings.html';
+        const isAdminPage = pagePath === 'admin-dashboard.html' || pagePath === 'admin-questions.html';
+
+        let accountHtml = '';
+        if (user) {
+            const avatarChar = user.name ? user.name.charAt(0).toUpperCase() : '👤';
+            const displayName = StorageHelper.escapeHTML(user.name || 'Student');
+            const deptText = StorageHelper.escapeHTML(user.department || 'BCA Examination');
+            accountHtml = `
+                <div class="mobile-drawer-section-label">ACCOUNT</div>
+                <div class="mobile-drawer-user-card" style="margin-bottom: 0.35rem;">
+                    <div class="user-avatar-circle" style="width: 36px; height: 36px; font-size: 1.1rem;">${avatarChar}</div>
+                    <div style="flex: 1; min-width: 0;">
+                        <strong style="font-size: 0.9rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${displayName}</strong>
+                        <small style="color: var(--text-secondary); font-size: 0.725rem;">${deptText}</small>
+                    </div>
+                </div>
+                <a href="${isDashboard ? 'javascript:void(0)' : 'dashboard.html'}" ${isDashboard ? 'onclick="openEditProfileModal()"' : ''} class="mobile-nav-link">
+                    <span class="mobile-nav-icon">👤</span> Profile
+                </a>
+                <button type="button" class="mobile-nav-link" style="color: var(--danger-color);" onclick="logoutUser()">
+                    <span class="mobile-nav-icon">🚪</span> Logout
+                </button>
+            `;
+        } else {
+            accountHtml = `
+                <div class="mobile-drawer-section-label">ACCOUNT</div>
+                <button type="button" class="mobile-nav-link" onclick="AuthManager.showAuthModal('login')">
+                    <span class="mobile-nav-icon">🔑</span> Log In
+                </button>
+                <button type="button" class="mobile-nav-link" onclick="AuthManager.showAuthModal('signup')">
+                    <span class="mobile-nav-icon">📝</span> Sign Up
+                </button>
+            `;
+        }
+
+        const isAdmin = user && (user.role === 'admin' || user.isAdmin);
+
+        drawer.innerHTML = `
+            <div class="quizpro-drawer-header">
+                <div class="quizpro-drawer-brand">
+                    <a href="index.html" class="quizpro-drawer-title">🎓 QuizPro</a>
+                    <span class="quizpro-drawer-subtitle">Online Quiz & Examination System</span>
+                </div>
+                <button type="button" class="quizpro-drawer-close" id="quizproDrawerClose" aria-label="Close Menu">&times;</button>
+            </div>
+
+            <div class="quizpro-drawer-nav">
+                <div class="mobile-drawer-section-label" style="margin-top: 0.2rem;">NAVIGATION</div>
+                <a href="dashboard.html" class="mobile-nav-link ${isDashboard ? 'active' : ''}">
+                    <span class="mobile-nav-icon">🏠</span> Dashboard
+                </a>
+                <a href="${isDashboard ? 'javascript:void(0)' : 'dashboard.html#departments'}" ${isDashboard ? 'onclick="scrollToSubjects()"' : ''} class="mobile-nav-link">
+                    <span class="mobile-nav-icon">🎯</span> Take Quiz
+                </a>
+                <a href="leaderboard.html" class="mobile-nav-link ${isLeaderboard ? 'active' : ''}">
+                    <span class="mobile-nav-icon">🏆</span> Leaderboard
+                </a>
+                <a href="certificate.html" class="mobile-nav-link ${isCertificate ? 'active' : ''}">
+                    <span class="mobile-nav-icon">📜</span> Certificates
+                </a>
+                <a href="settings.html" class="mobile-nav-link ${isSettings ? 'active' : ''}">
+                    <span class="mobile-nav-icon">⚙️</span> Settings
+                </a>
+
+                ${isAdmin ? `
+                <div class="mobile-drawer-section-label">ADMINISTRATION</div>
+                <a href="admin-dashboard.html" class="mobile-nav-link ${isAdminPage ? 'active' : ''}">
+                    <span class="mobile-nav-icon">🛠️</span> Admin Panel
+                </a>
+                ` : ''}
+
+                ${accountHtml}
+            </div>
+
+            <div class="mobile-drawer-footer">
+                <button type="button" class="mobile-theme-row" onclick="StorageHelper.toggleTheme()">
+                    <span style="display: flex; align-items: center; gap: 0.5rem;"><span class="mobile-nav-icon">🌙</span> Appearance</span>
+                    <small style="color: var(--text-secondary); font-weight: 500;">Dark / Light</small>
+                </button>
+            </div>
+        `;
     },
 
     bindEvents: function () {
@@ -611,29 +705,64 @@ const AuthManager = {
 document.addEventListener('DOMContentLoaded', () => {
     AuthManager.updateUI();
 
-    // Bind mobile menu drawer toggle
-    const toggleBtn = document.getElementById('quizproMobileToggle');
-    const drawer = document.getElementById('quizproMobileDrawer');
-    const overlay = document.getElementById('quizproDrawerOverlay');
-    const closeBtn = document.getElementById('quizproDrawerClose');
-
     function openDrawer() {
-        if (drawer) drawer.classList.add('open');
-        if (overlay) overlay.classList.add('active');
+        const drawerEl = document.getElementById('quizproMobileDrawer');
+        const overlayEl = document.getElementById('quizproDrawerOverlay');
+        if (drawerEl) {
+            drawerEl.classList.add('open', 'active', 'show');
+        }
+        if (overlayEl) {
+            overlayEl.classList.add('open', 'active', 'show');
+        }
         document.body.style.overflow = 'hidden';
     }
 
     function closeDrawer() {
-        if (drawer) drawer.classList.remove('open');
-        if (overlay) overlay.classList.remove('active');
+        const drawerEl = document.getElementById('quizproMobileDrawer');
+        const overlayEl = document.getElementById('quizproDrawerOverlay');
+        if (drawerEl) {
+            drawerEl.classList.remove('open', 'active', 'show');
+        }
+        if (overlayEl) {
+            overlayEl.classList.remove('open', 'active', 'show');
+        }
         document.body.style.overflow = '';
     }
 
-    if (toggleBtn) toggleBtn.addEventListener('click', openDrawer);
-    if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
-    if (overlay) overlay.addEventListener('click', closeDrawer);
+    // Export globally for inline onclick or manual invocations
+    window.openQuizProDrawer = openDrawer;
+    window.closeQuizProDrawer = closeDrawer;
+
+    // Use document event delegation so hamburger toggle works reliably across all pages
+    document.addEventListener('click', (e) => {
+        const toggleBtn = e.target.closest('#quizproMobileToggle, .quizpro-mobile-toggle');
+        if (toggleBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            openDrawer();
+            return;
+        }
+
+        const closeBtn = e.target.closest('#quizproDrawerClose, .quizpro-drawer-close');
+        if (closeBtn) {
+            e.preventDefault();
+            closeDrawer();
+            return;
+        }
+
+        const overlayEl = e.target.closest('#quizproDrawerOverlay, .quizpro-drawer-overlay');
+        if (overlayEl) {
+            closeDrawer();
+            return;
+        }
+
+        if (e.target.closest('#quizproMobileDrawer a, .quizpro-mobile-drawer a')) {
+            closeDrawer();
+        }
+    });
+
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && drawer && drawer.classList.contains('open')) {
+        if (e.key === 'Escape') {
             closeDrawer();
         }
     });

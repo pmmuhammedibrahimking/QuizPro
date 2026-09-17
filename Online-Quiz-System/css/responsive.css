@@ -1,197 +1,431 @@
 /* ==========================================================================
-   QuizPro Master Responsive Design System
-   Breakpoints Covered: 320px, 375px, 425px, 576px, 768px, 992px, 1024px, 
-                        1200px, 1366px, 1440px, 1600px, 1920px
+   QuizPro Master Responsive & Mobile Optimization System
+   Supported Devices & Orientations:
+   - Ultra Wide Desktop (1920px+)
+   - Standard Desktop (1440px - 1919px)
+   - Large Laptop (1200px - 1439px)
+   - Small Laptop / Tablet Landscape (992px - 1199px)
+   - Tablet Portrait (768px - 991px)
+   - Large / Standard Phones (414px, 430px, 480px, 600px)
+   - Small / Very Small Phones (320px, 360px, 375px, 390px)
+   - Mobile Landscape (568x320, 667x375, 844x390, 915x412, 1024x768)
    ========================================================================== */
+
+/* Universal Fluid Safety & Box-Sizing Reset */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+html,
+body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
+}
+
+img,
+svg,
+video,
+canvas {
+    max-width: 100%;
+    height: auto;
+}
 
 /* 1. Ultra Wide Screens (1920px and above) */
 @media (min-width: 1920px) {
-    .container {
-        max-width: 1600px !important;
-    }
-    html {
-        font-size: 18px;
+
+    .container,
+    .dashboard-wrapper {
+        max-width: 1440px !important;
     }
 }
 
-/* 2. Desktop High Resolution (1600px - 1919px) */
-@media (min-width: 1600px) and (max-width: 1919px) {
-    .container {
-        max-width: 1400px !important;
+/* 2. Standard Desktop (1440px - 1919px) */
+@media (min-width: 1440px) and (max-width: 1919px) {
+
+    .container,
+    .dashboard-wrapper {
+        max-width: 1240px !important;
     }
 }
 
-/* 3. Standard Desktop (1440px - 1599px) */
-@media (min-width: 1440px) and (max-width: 1599px) {
-    .container {
-        max-width: 1280px !important;
+/* 3. Large Laptop (1200px - 1439px) */
+@media (min-width: 1200px) and (max-width: 1439px) {
+
+    .container,
+    .dashboard-wrapper {
+        max-width: 1140px !important;
     }
 }
 
-/* 4. Large Laptop (1366px - 1439px) */
-@media (min-width: 1366px) and (max-width: 1439px) {
-    .container {
-        max-width: 1200px !important;
-    }
-}
+/* 4. Small Laptop / Large Tablet Landscape (992px - 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
 
-/* 5. Standard Laptop (1200px - 1365px) */
-@media (min-width: 1200px) and (max-width: 1365px) {
-    .container {
-        max-width: 1100px !important;
-    }
-}
-
-/* 6. Small Laptop / Large Tablet Landscape (1024px - 1199px) */
-@media (min-width: 1024px) and (max-width: 1199px) {
-    .container {
+    .container,
+    .dashboard-wrapper {
         max-width: 960px !important;
     }
-    .stats-grid-8 {
+
+    .stats-counter-grid {
         grid-template-columns: repeat(4, 1fr);
     }
+
+    .features-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
     .quick-actions-grid {
         grid-template-columns: repeat(6, 1fr);
     }
-}
 
-/* 7. Tablet Landscape (992px - 1023px) */
-@media (min-width: 992px) and (max-width: 1023px) {
-    .container {
-        max-width: 900px !important;
-    }
     .stats-grid-8 {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    .quick-actions-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    .charts-2col-grid, .dashboard-2col-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
-/* 8. Tablet Portrait & Mobile (max-width: 991px) */
+/* 5. Tablet Portrait & Below (max-width: 991px) */
 @media (max-width: 991px) {
+    body {
+        padding: 0.85rem 0.5rem;
+    }
+
     header.container {
         flex-wrap: wrap;
-        gap: 0.75rem;
+        gap: 0.65rem;
+        padding: 0.75rem 1rem;
     }
-    header.container > nav {
-        display: none !important; /* Hide desktop horizontal buttons on mobile/tablet */
+
+    header.container>nav {
+        display: none !important;
+        /* Convert desktop nav to mobile drawer */
     }
+
     .quizpro-mobile-toggle {
-        display: block !important; /* Show mobile drawer toggle button */
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
     }
+
     .header-search-bar {
         order: 3;
         width: 100%;
         max-width: 100% !important;
-        margin: 0.5rem 0 0 0 !important;
+        margin: 0.4rem 0 0 0 !important;
     }
-    .stats-grid-8 {
+
+    .hero {
+        grid-template-columns: 1fr;
+        padding: 2rem 1.25rem;
+        text-align: center;
+    }
+
+    .hero-subtitle {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+
+    .stats-counter-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     .quick-actions-grid {
         grid-template-columns: repeat(3, 1fr);
     }
+
+    .stats-grid-8 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .charts-2col-grid,
+    .dashboard-2col-grid {
+        grid-template-columns: 1fr !important;
+    }
+
     .quiz-layout {
         grid-template-columns: 1fr !important;
     }
-    .charts-2col-grid, .dashboard-2col-grid {
-        grid-template-columns: 1fr !important;
-    }
+
     .profile-card-pro {
         grid-template-columns: 1fr;
         text-align: center;
     }
+
+    .profile-avatar {
+        margin: 0 auto;
+    }
+
+    .profile-details-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-wrapper {
+        grid-template-columns: 1fr !important;
+    }
+
+    .dashboard-sidebar.desktop-only {
+        display: none !important;
+    }
 }
 
-/* 9. Mobile Screen Sizes (max-width: 767px) */
+/* 6. Standard Mobile Phones (max-width: 767px) */
 @media (max-width: 767px) {
-    body {
-        padding: 0.75rem 0.5rem;
-    }
     .container {
-        padding: 0 0.5rem;
+        padding: 0 0.4rem;
     }
-    .stats-grid-8 {
+
+    .card {
+        padding: 1.25rem 0.85rem;
+        border-radius: var(--radius-md);
+    }
+
+    .hero-title {
+        font-size: clamp(1.6rem, 6vw, 2.2rem);
+    }
+
+    .hero-subtitle {
+        font-size: 0.925rem;
+    }
+
+    .stats-counter-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
     }
-    .quick-actions-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+
     .features-grid {
         grid-template-columns: 1fr;
     }
+
+    .quick-actions-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+
+    .stats-grid-8 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
     .profile-details-list {
         grid-template-columns: 1fr;
+        text-align: center;
     }
+
     .cert-frame {
-        padding: 1.25rem 0.75rem !important;
-        box-shadow: none;
+        padding: 1.25rem 0.65rem !important;
     }
+
     .cert-logo {
         font-size: 1.1rem !important;
     }
+
     .cert-title {
-        font-size: 1.4rem !important;
+        font-size: 1.35rem !important;
     }
-    .cert-recipient {
-        margin: 1rem 0 !important;
-    }
+
     .cert-name-text {
-        font-size: 1.6rem !important;
+        font-size: 1.5rem !important;
     }
-    .cert-footer-grid {
-        grid-template-columns: 1fr !important;
-        gap: 1.5rem !important;
-        text-align: center !important;
+
+    .cert-footer {
+        flex-direction: column;
+        gap: 1.25rem;
+        align-items: center;
+        text-align: center;
     }
+
     .cert-details-grid {
         grid-template-columns: 1fr !important;
         gap: 0.5rem !important;
     }
+
     .palette-grid {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
     }
 }
 
-/* 10. Small Mobile Devices (max-width: 480px) */
+/* 7. Small & Very Small Phones (max-width: 480px) */
 @media (max-width: 480px) {
     body {
-        padding: 0.5rem 0.25rem;
+        padding: 0.4rem 0.2rem;
     }
-    .card {
-        padding: 1.25rem 0.85rem;
-        border-radius: 12px;
+
+    h1 {
+        font-size: clamp(1.4rem, 7vw, 1.8rem);
     }
+
+    h2 {
+        font-size: clamp(1.2rem, 5vw, 1.5rem);
+    }
+
+    h3 {
+        font-size: clamp(1.05rem, 4vw, 1.25rem);
+    }
+
+    /* Touch-friendly inputs with no iOS Safari auto-zoom */
+    input,
+    select,
+    textarea,
+    button {
+        font-size: 16px !important;
+    }
+
     .btn {
         width: 100%;
-        margin-bottom: 0.4rem;
         padding: 0.75rem 1rem;
-        font-size: 0.95rem;
     }
+
+    .hero-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .quick-actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+
     .stats-grid-8 {
         grid-template-columns: 1fr;
     }
-    .quick-actions-grid {
-        grid-template-columns: 1fr;
+
+    .stats-counter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
     }
+
     .modal-card {
         padding: 1.25rem 0.85rem;
-        width: 95% !important;
+        width: min(500px, calc(100vw - 20px)) !important;
+        max-height: calc(100vh - 30px);
+        overflow-y: auto;
+    }
+
+    .palette-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .dept-pill-group {
+        gap: 0.35rem;
+    }
+
+    .dept-pill {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.85rem;
+    }
+
+    #proBadgesGrid {
+        grid-template-columns: 1fr !important;
     }
 }
 
-/* Universal Overflow & Table Safety */
-body, html {
-    max-width: 100vw;
-    overflow-x: hidden;
+/* 8. Extra Small Phones (max-width: 359px) */
+@media (max-width: 359px) {
+    body {
+        padding: 0.25rem 0.15rem;
+    }
+
+    .container {
+        padding: 0 0.25rem;
+    }
+
+    .logo {
+        font-size: 1.15rem;
+    }
+
+    .stats-counter-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 0.65rem;
+    }
+
+    .quick-action-card {
+        padding: 0.85rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .quick-action-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1.4rem;
+    }
+
+    .stat-card-pro {
+        padding: 0.85rem 0.65rem;
+    }
+
+    .stat-card-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.4rem;
+    }
+
+    .palette-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.35rem;
+    }
 }
 
-table, .table-container, .table-responsive {
+/* 9. Mobile Landscape Orientation Optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+    body {
+        padding: 0.5rem;
+    }
+
+    header.container {
+        position: relative;
+        top: 0;
+        margin-bottom: 1rem;
+    }
+
+    .quizpro-mobile-drawer {
+        overflow-y: auto;
+        padding-bottom: 2rem;
+    }
+
+    .modal-card {
+        max-height: 92vh;
+        overflow-y: auto;
+    }
+
+    .hero {
+        padding: 1.25rem 1rem;
+    }
+
+    .canvas-container {
+        height: 180px;
+    }
+}
+
+/* 10. Table & Container Horizontal Scroll Safety */
+table,
+.table-responsive {
     width: 100%;
+    max-width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
+/* Accessibility: Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

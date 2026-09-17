@@ -92,7 +92,7 @@ const DepartmentSubjects = {
     BCA: ['Python', 'Java', 'DataStructures', 'DBMS', 'HTML', 'CSS', 'JavaScript'],
     BSc: ['Python', 'DataStructures', 'DBMS', 'Java'],
     'BCom CA': ['Accounting', 'DBMS', 'HTML', 'CSS', 'Python'],
-    BBA: ['BusinessAdmin', 'Accounting', 'JavaScript'],
+    BBA: ['BusinessAdmin', 'Accounting'],
     BCom: ['Accounting', 'BusinessAdmin'],
     General: ['Python', 'HTML', 'CSS', 'JavaScript', 'DataStructures', 'DBMS', 'Java', 'Accounting', 'BusinessAdmin']
 };

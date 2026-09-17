@@ -1,3 +1,7 @@
+/* ==========================================================================
+   QuizPro Result & Review Dashboard Styles
+   ========================================================================== */
+
 .result-header {
     text-align: center;
     margin-bottom: 2rem;
@@ -5,14 +9,19 @@
 
 .grade-badge {
     display: inline-block;
-    padding: 1rem 2rem;
-    border-radius: 50px;
-    font-size: 2.5rem;
-    font-weight: 700;
+    padding: 0.75rem 2rem;
+    border-radius: var(--radius-full);
+    font-size: 2.25rem;
+    font-weight: 800;
     margin: 1rem 0;
-    color: white;
-    box-shadow: var(--shadow);
-    animation: popIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    color: #ffffff;
+    box-shadow: var(--shadow-sm);
+    animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 .stats-grid {
@@ -33,12 +42,12 @@
     width: 160px;
     height: 160px;
     border-radius: 50%;
-    background: conic-gradient(var(--primary-color) 0%, rgba(99, 102, 241, 0.15) 0%);
+    background: conic-gradient(var(--primary-color) 0%, var(--primary-light) 0%);
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto;
-    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+    box-shadow: var(--shadow);
     transition: all 1s ease;
 }
 
@@ -51,10 +60,11 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
 }
 
 .score-gauge-value {
+    font-family: 'Outfit', sans-serif;
     font-size: 2.2rem;
     font-weight: 800;
     color: var(--primary-color);
@@ -70,11 +80,10 @@
 .analytics-chart-box {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    backdrop-filter: var(--glass-blur);
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     padding: 1.5rem;
     margin-bottom: 2rem;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-sm);
 }
 
 .canvas-container {
@@ -88,18 +97,17 @@ canvas#performanceChart {
     height: 100% !important;
 }
 
-/* Certificate Styles - Model Design */
+/* Certificate Styles - Professional Academic Certificate */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600;700;800&family=Dancing+Script:wght@700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
-
 
 .certificate {
     background: #ffffff;
     color: #1e293b;
-    border: 14px solid #0f2b5c;
-    border-radius: 6px;
+    border: 12px solid #0f2b5c;
+    border-radius: var(--radius-sm);
     padding: 1.2rem;
     position: relative;
-    box-shadow: 0 20px 50px rgba(15, 43, 92, 0.25);
+    box-shadow: var(--shadow-lg);
     margin-top: 2rem;
     overflow: hidden;
     font-family: 'Cinzel', serif;
@@ -107,7 +115,7 @@ canvas#performanceChart {
 
 .cert-frame {
     border: 3px solid #c5a059;
-    padding: 2.5rem 2.5rem;
+    padding: 2.5rem 2rem;
     position: relative;
     background: radial-gradient(circle at center, #ffffff 60%, #fdfbf7 100%);
     box-shadow: inset 0 0 0 4px #0f2b5c;
@@ -202,13 +210,12 @@ canvas#performanceChart {
 
 .cert-title {
     font-family: 'Cinzel Decorative', 'Cinzel', serif;
-    font-size: 2.3rem;
+    font-size: 2.2rem;
     font-weight: 700;
     color: #c5a059;
     text-transform: capitalize;
     margin-bottom: 0.25rem;
     letter-spacing: 0.04em;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
 .cert-subtitle {
@@ -269,7 +276,7 @@ canvas#performanceChart {
     text-align: left;
     background: rgba(197, 160, 89, 0.06);
     padding: 1rem 1.5rem;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     border: 1px dashed rgba(197, 160, 89, 0.4);
 }
 
@@ -401,38 +408,44 @@ canvas#performanceChart {
     text-align: center;
 }
 
-/* Review Styles */
+/* Detailed Review Styles */
 .review-item {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     padding: 1.5rem;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-left: 5px solid var(--border-color);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
-    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .review-item:hover {
-    transform: translateX(6px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    transform: translateX(4px);
+    box-shadow: var(--shadow);
 }
 
 .review-item.correct {
     border-left-color: var(--success-color);
+    background-color: var(--card-bg);
 }
 
 .review-item.wrong {
     border-left-color: var(--danger-color);
+    background-color: var(--card-bg);
 }
 
 .review-question {
+    font-family: 'Outfit', 'Inter', sans-serif;
     font-weight: 600;
     margin-bottom: 1rem;
     font-size: 1.1rem;
+    color: var(--text-primary);
 }
 
 .review-answer {
     margin-bottom: 0.5rem;
+    font-size: 0.95rem;
 }
 
 .review-explanation {
@@ -441,6 +454,7 @@ canvas#performanceChart {
     border-top: 1px solid var(--border-color);
     font-style: italic;
     color: var(--text-secondary);
+    font-size: 0.9rem;
 }
 
 @media print {

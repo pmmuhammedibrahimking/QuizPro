@@ -11,17 +11,13 @@
 </head>
 
 <body>
-    <div class="global-loader" id="loader">
-        <div class="spinner"></div>
-    </div>
-
     <!-- Header Navigation -->
     <header class="animate-fade-in container">
         <a href="index.html" class="logo">🎓 QuizPro</a>
-        <nav style="display: flex; gap: 0.75rem; align-items: center;">
-            <a href="dashboard.html" class="btn btn-secondary">Dashboard</a>
-            <a href="leaderboard.html" class="btn btn-secondary">Leaderboard</a>
-            <a href="admin-dashboard.html" class="btn btn-secondary">Admin Panel</a>
+        <nav class="main-nav">
+            <a href="dashboard.html" class="btn btn-secondary btn-sm">Dashboard</a>
+            <a href="leaderboard.html" class="btn btn-secondary btn-sm">Leaderboard</a>
+            <a href="admin-dashboard.html" class="btn btn-secondary btn-sm">Admin Panel</a>
             <button type="button" class="theme-toggle nav-icon-btn" id="themeToggleBtn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme">🌓</button>
             <div class="user-auth-widget"></div>
         </nav>
@@ -41,6 +37,10 @@
                 <a href="leaderboard.html" class="btn btn-secondary">Leaderboard</a>
                 <a href="admin-dashboard.html" class="btn btn-secondary">Admin Panel</a>
                 <a href="index.html" class="btn btn-secondary">Home</a>
+            </div>
+            <div class="nav-auth-container" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="user-auth-widget"></div>
+                <button type="button" class="theme-toggle nav-icon-btn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme" style="width: 100%; height: 40px; border-radius: 8px; font-size: 1rem;">🌓 Toggle Theme</button>
             </div>
         </div>
     </aside>
@@ -64,22 +64,22 @@
 
         <!-- System Statistics Counter -->
         <section class="section animate-fade-in" style="animation-delay: 0.15s;">
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;" class="stats-counter-grid">
+            <div class="stats-counter-grid">
                 <div class="stat-card">
-                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary-color);">500+</div>
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">Questions Bank</div>
+                    <div class="stat-value" style="color: var(--primary-color);">500+</div>
+                    <div class="stat-label">Questions Bank</div>
                 </div>
                 <div class="stat-card">
-                    <div style="font-size: 2rem; font-weight: 800; color: var(--secondary-color);">10k+</div>
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">Quizzes Attempted</div>
+                    <div class="stat-value" style="color: var(--secondary-color);">10k+</div>
+                    <div class="stat-label">Quizzes Attempted</div>
                 </div>
                 <div class="stat-card">
-                    <div style="font-size: 2rem; font-weight: 800; color: var(--success-color);">99.8%</div>
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">System Accuracy</div>
+                    <div class="stat-value" style="color: var(--success-color);">99.8%</div>
+                    <div class="stat-label">System Accuracy</div>
                 </div>
                 <div class="stat-card">
-                    <div style="font-size: 2rem; font-weight: 800; color: var(--warning-color);">100%</div>
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">QR Certificates</div>
+                    <div class="stat-value" style="color: var(--warning-color);">100%</div>
+                    <div class="stat-label">QR Certificates</div>
                 </div>
             </div>
         </section>
@@ -213,17 +213,20 @@
             grid.innerHTML = '';
 
             subjects.forEach(sub => {
-                const qCount = defaultQuizQuestions[sub] ? defaultQuizQuestions[sub].length : 5;
                 const card = document.createElement('div');
                 card.className = 'feature-card animate-scale-up';
                 card.innerHTML = `
                     <div class="feature-icon">📚</div>
                     <h3>${sub}</h3>
-                    <p>${qCount}+ Questions | Department: ${currentDept}</p>
                     <button class="btn btn-primary btn-sm btn-block" style="margin-top: 1rem" onclick="selectQuizSubject('${sub}')">Start ${sub} Quiz</button>
                 `;
                 grid.appendChild(card);
             });
+
+            const searchInput = document.getElementById('subjectSearchInput');
+            if (searchInput && searchInput.value) {
+                searchSubjects();
+            }
         }
 
         function filterDepartment(dept, el) {

@@ -249,23 +249,126 @@ const StorageHelper = {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    },
+
+    // Privacy Policy Acknowledgement Storage
+    isPrivacyAcknowledged: function () {
+        return localStorage.getItem('privacyAcknowledged') === 'true';
+    },
+
+    acknowledgePrivacy: function () {
+        localStorage.setItem('privacyAcknowledged', 'true');
+    },
+
+    // Global Loader Helpers
+    hideLoader: function () {
+        hideGlobalLoader();
+    },
+
+    showLoader: function () {
+        showGlobalLoader();
     }
 };
 
+// Global Modal Helpers
+function openModal(modalId) {
+    const modal = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
+    if (modal) {
+        modal.classList.add('active', 'show');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = typeof modalId === 'string' ? document.getElementById(modalId) : modalId;
+    if (modal) {
+        modal.classList.remove('active', 'show');
+        const remaining = document.querySelectorAll('.modal-backdrop.active, .modal-backdrop.show, .modal-overlay.active, .modal-overlay.show');
+        if (remaining.length === 0) {
+            document.body.style.overflow = '';
+        }
+    }
+}
+
+// Global Modal Keyboard ESC & Backdrop Click Listeners
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const activeModals = document.querySelectorAll('.modal-backdrop.active, .modal-backdrop.show, .modal-overlay.active, .modal-overlay.show');
+        activeModals.forEach(modal => {
+            if (modal.id === 'privacyModal') {
+                if (typeof acknowledgePrivacyPolicy === 'function') {
+                    acknowledgePrivacyPolicy();
+                } else {
+                    StorageHelper.acknowledgePrivacy();
+                    closeModal(modal);
+                }
+            } else {
+                closeModal(modal);
+            }
+        });
+    }
+});
+
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-backdrop') || e.target.classList.contains('modal-overlay')) {
+        const modal = e.target;
+        if (modal.id === 'privacyModal') {
+            if (typeof acknowledgePrivacyPolicy === 'function') {
+                acknowledgePrivacyPolicy();
+            } else {
+                StorageHelper.acknowledgePrivacy();
+                closeModal(modal);
+            }
+        } else {
+            closeModal(modal);
+        }
+    }
+});
+
 // Global Loader Hiding
 function hideGlobalLoader() {
-    setTimeout(() => {
-        const loader = document.getElementById('loader');
-        if (loader) loader.classList.add('loader-hidden');
-    }, 150);
+    const loader = document.getElementById('loader') || document.querySelector('.global-loader');
+    if (loader) {
+        loader.classList.add('hidden');
+        loader.classList.add('loader-hidden');
+        loader.style.opacity = '0';
+        loader.style.visibility = 'hidden';
+        loader.style.pointerEvents = 'none';
+        setTimeout(() => {
+            if (loader) loader.style.display = 'none';
+        }, 300);
+    }
+}
+
+function showGlobalLoader() {
+    const loader = document.getElementById('loader') || document.querySelector('.global-loader');
+    if (loader) {
+        loader.style.display = 'flex';
+        loader.style.visibility = 'visible';
+        loader.style.opacity = '1';
+        loader.style.pointerEvents = 'auto';
+        loader.classList.remove('hidden', 'loader-hidden');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     StorageHelper.applySettings();
+    hideGlobalLoader();
     if (document.readyState === 'complete') hideGlobalLoader();
     else window.addEventListener('load', hideGlobalLoader);
+
+    // Stop propagation on modal cards so clicks inside never trigger background dismiss
+    document.querySelectorAll('.modal-card').forEach(card => {
+        card.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+    });
 });
+
+// Fallback safety timer to ensure loader is never stuck on screen
+setTimeout(hideGlobalLoader, 800);
 
 window.addEventListener('pageshow', (e) => {
     if (e.persisted) hideGlobalLoader();
 });
+
