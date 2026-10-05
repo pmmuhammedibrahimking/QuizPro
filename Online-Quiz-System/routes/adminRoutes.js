@@ -14,7 +14,7 @@ router.use(authorize('admin'));
 // @access  Private/Admin
 router.get('/dashboard', async (req, res, next) => {
     try {
-        const totalUsers = await User.countDocuments({ role: 'user' });
+        const totalUsers = await User.countDocuments({ role: { $in: ['user', 'student'] } });
         const maxUsersLimit = 40;
         const remainingSlots = Math.max(0, maxUsersLimit - totalUsers);
         const totalQuestions = await Question.countDocuments();
@@ -23,7 +23,7 @@ router.get('/dashboard', async (req, res, next) => {
         
         const passRate = totalAttempts > 0 ? parseFloat(((passedAttempts / totalAttempts) * 100).toFixed(1)) : 0;
         
-        const recentUsers = await User.find({ role: 'user' }).sort({ createdAt: -1 }).limit(5);
+        const recentUsers = await User.find({ role: { $in: ['user', 'student'] } }).sort({ createdAt: -1 }).limit(5);
         const recentAttempts = await QuizAttempt.find().sort({ date: -1 }).limit(5);
 
         res.status(200).json({

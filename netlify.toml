@@ -1,0 +1,7 @@
+[build]
+  publish = "Online-Quiz-System"
+
+[[redirects]]
+  from = "/*"
+  to = "/:splat"
+  status = 200

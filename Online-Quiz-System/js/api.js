@@ -56,8 +56,15 @@ const API = {
     forgotPassword: function(email) {
         return this.request('/auth/forgot-password', 'POST', { email });
     },
-    resetPassword: function(resetToken, newPassword) {
-        return this.request('/auth/reset-password', 'POST', { resetToken, newPassword });
+    forgotEmail: function(data) {
+        return this.request('/auth/forgot-email', 'POST', data);
+    },
+    resetPassword: function(resetTokenOrEmail, newPassword) {
+        return this.request('/auth/reset-password', 'POST', {
+            resetToken: resetTokenOrEmail,
+            email: resetTokenOrEmail,
+            newPassword
+        });
     },
     // Quiz endpoints
     getCategories: function() {

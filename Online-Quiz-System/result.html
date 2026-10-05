@@ -24,7 +24,26 @@
             <button type="button" class="theme-toggle nav-icon-btn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme">🌓</button>
             <div class="user-auth-widget"></div>
         </nav>
+        <button type="button" class="quizpro-mobile-toggle" id="quizproMobileToggle" aria-label="Open Mobile Menu">☰</button>
     </header>
+
+    <!-- Mobile Navigation Drawer -->
+    <div class="quizpro-drawer-overlay" id="quizproDrawerOverlay"></div>
+    <aside class="quizpro-mobile-drawer" id="quizproMobileDrawer">
+        <div>
+            <div class="quizpro-drawer-header">
+                <a href="index.html" class="logo">🎓 QuizPro</a>
+                <button type="button" class="quizpro-drawer-close" id="quizproDrawerClose">&times;</button>
+            </div>
+            <div class="quizpro-drawer-nav">
+                <a href="dashboard.html" class="btn btn-secondary">📊 Dashboard</a>
+                <a href="review.html" class="btn btn-secondary">🔍 Review Answers</a>
+                <a href="certificate.html" class="btn btn-secondary">📜 Certificates</a>
+                <a href="leaderboard.html" class="btn btn-secondary">🏆 Leaderboard</a>
+                <a href="index.html" class="btn btn-secondary">🏠 Home</a>
+            </div>
+        </div>
+    </aside>
 
     <main class="container" style="max-width: 850px;">
         <div class="card animate-fade-in text-center" style="margin-bottom: 2rem;">
@@ -77,11 +96,11 @@
         <!-- Action Bar Buttons -->
         <div class="card animate-fade-in" style="animation-delay: 0.3s;">
             <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
-                <a href="review.html" class="btn btn-secondary btn-large">🔍 Review Question Answers</a>
-                <a href="certificate.html" id="certDownloadBtn" class="btn btn-primary btn-large">📜 Download Official Certificate</a>
-                <button class="btn btn-secondary btn-large" onclick="window.print()">🖨️ Print Result</button>
-                <button class="btn btn-secondary btn-large" onclick="shareResultCard()">🔗 Share Score</button>
+                <a href="review.html" class="btn btn-secondary btn-large">🔍 Review Answers</a>
+                <a href="certificate.html" id="certDownloadBtn" class="btn btn-primary btn-large">📜 Download Certificate</a>
+                <a href="dashboard.html" class="btn btn-secondary btn-large">🏠 Back to Dashboard</a>
                 <a href="instructions.html" class="btn btn-secondary btn-large">🔄 Retake Quiz</a>
+                <button class="btn btn-secondary btn-large" onclick="window.print()">🖨️ Print Result</button>
             </div>
         </div>
     </main>

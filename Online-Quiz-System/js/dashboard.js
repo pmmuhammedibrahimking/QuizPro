@@ -106,16 +106,28 @@ function renderProStudentProfile(user) {
     const joined = document.getElementById('proJoinedDate');
     const sideName = document.getElementById('sidebarNavName');
     const sideDept = document.getElementById('sidebarNavDept');
+    const sideAvatar = document.getElementById('sidebarAvatar');
+    const drawerAvatar = document.getElementById('mobileDrawerAvatar');
+    const drawerName = document.getElementById('mobileDrawerName');
+    const drawerDept = document.getElementById('mobileDrawerDept');
 
-    if (avatar) avatar.innerText = user.name ? user.name.charAt(0).toUpperCase() : '👤';
+    const initial = user.name ? user.name.charAt(0).toUpperCase() : '👤';
+
+    if (avatar) avatar.innerHTML = `${initial} <div class="welcome-online-dot" title="Active"></div>`;
     if (name) name.innerText = user.name || 'Alex Morgan';
     if (reg) reg.innerText = user.regNumber || 'BCA2026042';
     if (dept) dept.innerText = user.department || 'BCA';
     if (sem) sem.innerText = user.semester || 'Semester VI';
     if (college) college.innerText = user.college || 'School of Computer Science';
     if (joined) joined.innerText = user.joinedDate || 'August 2025';
+
     if (sideName) sideName.innerText = user.name || 'Student Portal';
     if (sideDept) sideDept.innerText = (user.department || 'BCA') + ' Examination';
+    if (sideAvatar) sideAvatar.innerText = initial;
+
+    if (drawerName) drawerName.innerText = user.name || 'Guest Learner';
+    if (drawerDept) drawerDept.innerText = (user.department || 'BCA') + ' Examination';
+    if (drawerAvatar) drawerAvatar.innerText = initial;
 
     const history = StorageHelper.getHistory();
     if (totalQ) totalQ.innerText = history.length;
@@ -143,7 +155,9 @@ function setupEditProfileForm() {
 
     form.onsubmit = (e) => {
         e.preventDefault();
+        const existing = StorageHelper.getUser() || {};
         const updated = {
+            ...existing,
             name: document.getElementById('editName').value.trim(),
             regNumber: document.getElementById('editRegNo').value.trim(),
             department: document.getElementById('editDept').value,
@@ -152,6 +166,15 @@ function setupEditProfileForm() {
         };
 
         StorageHelper.saveUser(updated);
+
+        // Sync with quizUsers array
+        let users = JSON.parse(localStorage.getItem('quizUsers')) || [];
+        const idx = users.findIndex(u => (u.id && u.id === updated.id) || (u.email && u.email.toLowerCase() === (updated.email || '').toLowerCase()));
+        if (idx !== -1) {
+            users[idx] = { ...users[idx], ...updated };
+            localStorage.setItem('quizUsers', JSON.stringify(users));
+        }
+
         renderProStudentProfile(StorageHelper.getUser());
         AuthManager.updateUI();
         closeEditProfileModal();
@@ -494,3 +517,15 @@ function viewQuizAttemptResult(encodedItem) {
         window.location.href = 'result.html';
     }
 }
+
+// Window resize debounce for responsive HTML5 canvas charts
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        const history = StorageHelper.getHistory();
+        drawPerformanceTrendChart(history);
+        drawSubjectAccuracyChart(history);
+    }, 200);
+});
+

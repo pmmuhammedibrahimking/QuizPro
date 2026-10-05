@@ -6,7 +6,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // Ensure admin privileges smoothly
     if (!AuthManager.isAdmin()) {
-        AuthManager.ensureAdminSession();
+        window.location.href = 'admin-login.html';
+        return;
     }
 
     await loadAdminOverview();

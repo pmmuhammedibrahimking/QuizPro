@@ -101,13 +101,17 @@ function renderQuestion(index) {
         diffBadge.style.background = q.difficulty === 'easy' ? 'var(--success-color)' : (q.difficulty === 'hard' ? 'var(--danger-color)' : 'var(--primary-color)');
     }
 
-    // Question Text
-    document.getElementById('questionText').innerText = q.q;
+    // Safe Question Text Rendering (renders literal tags like <h1>, <head> as plain text)
+    const qTextEl = document.getElementById('questionText');
+    if (qTextEl) {
+        qTextEl.textContent = q.q;
+    }
 
     // Code Snippet Box
     const codeBox = document.getElementById('codeSnippetBox');
     if (q.type === 'code' && q.code) {
-        document.getElementById('codeSnippetText').innerText = q.code;
+        const codeEl = document.getElementById('codeSnippetText');
+        if (codeEl) codeEl.textContent = q.code;
         codeBox.style.display = 'block';
     } else {
         codeBox.style.display = 'none';

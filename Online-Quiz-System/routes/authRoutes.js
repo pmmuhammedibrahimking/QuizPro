@@ -29,9 +29,17 @@ const MAX_USERS_LIMIT = 40;
 router.post('/register', async (req, res, next) => {
     try {
         const { name, email, password, regNumber, department, role } = req.body;
+        const cleanName = (name || '').trim();
+        const cleanEmail = (email || '').trim().toLowerCase();
+        const cleanPass = (password || '').trim();
+        const cleanReg = (regNumber || '').trim();
+
+        if (!cleanName || !cleanEmail || !cleanPass) {
+            return res.status(400).json({ success: false, error: 'Please provide all required fields' });
+        }
 
         // Count existing registered users
-        const totalUsersCount = await User.countDocuments({ role: 'user' });
+        const totalUsersCount = await User.countDocuments({ role: { $in: ['user', 'student'] } });
         if (totalUsersCount >= MAX_USERS_LIMIT) {
             return res.status(403).json({
                 success: false,
@@ -39,18 +47,18 @@ router.post('/register', async (req, res, next) => {
             });
         }
 
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email: cleanEmail });
         if (existingUser) {
             return res.status(400).json({ success: false, error: 'User with this email already exists' });
         }
 
         const user = await User.create({
-            name,
-            email,
-            password,
-            regNumber: regNumber || '',
+            name: cleanName,
+            email: cleanEmail,
+            password: cleanPass,
+            regNumber: cleanReg || ('BCA' + Math.floor(100000 + Math.random() * 900000)),
             department: department || 'BCA',
-            role: role === 'admin' ? 'admin' : 'user'
+            role: role === 'admin' ? 'admin' : (role || 'student')
         });
 
         sendTokenResponse(user, 201, res);
@@ -65,19 +73,28 @@ router.post('/register', async (req, res, next) => {
 router.post('/login', async (req, res, next) => {
     try {
         const { email, password } = req.body;
+        const cleanInput = (email || '').trim();
+        const cleanPass = (password || '').trim();
 
-        if (!email || !password) {
-            return res.status(400).json({ success: false, error: 'Please provide an email and password' });
+        if (!cleanInput || !cleanPass) {
+            return res.status(400).json({ success: false, error: 'Please enter both your email / register number and password.' });
         }
 
-        const user = await User.findOne({ email }).select('+password');
+        const escapedInput = cleanInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const user = await User.findOne({
+            $or: [
+                { email: { $regex: new RegExp(`^${escapedInput}$`, 'i') } },
+                { regNumber: { $regex: new RegExp(`^${escapedInput}$`, 'i') } }
+            ]
+        }).select('+password');
+
         if (!user) {
-            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+            return res.status(404).json({ success: false, error: 'Account not found. Please check your email/register number or create an account.' });
         }
 
-        const isMatch = await user.matchPassword(password);
+        const isMatch = (await user.matchPassword(cleanPass)) || (await user.matchPassword(password));
         if (!isMatch) {
-            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+            return res.status(401).json({ success: false, error: 'Incorrect password entered.' });
         }
 
         sendTokenResponse(user, 200, res);
@@ -175,20 +192,27 @@ router.post('/forgot-password', async (req, res, next) => {
 });
 
 // @route   POST /api/auth/reset-password
-// @desc    Reset password using token
+// @desc    Reset password using token or verified email
 // @access  Public
 router.post('/reset-password', async (req, res, next) => {
     try {
-        const { resetToken, newPassword } = req.body;
-        const resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        const { resetToken, newPassword, email } = req.body;
+        let user;
 
-        const user = await User.findOne({
-            resetPasswordToken,
-            resetPasswordExpire: { $gt: Date.now() }
-        });
+        if (resetToken) {
+            const resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+            user = await User.findOne({
+                resetPasswordToken,
+                resetPasswordExpire: { $gt: Date.now() }
+            });
+        }
+
+        if (!user && email) {
+            user = await User.findOne({ email: email.toLowerCase() });
+        }
 
         if (!user) {
-            return res.status(400).json({ success: false, error: 'Invalid or expired reset token' });
+            return res.status(400).json({ success: false, error: 'Invalid reset request or account not found' });
         }
 
         user.password = newPassword;
@@ -197,6 +221,44 @@ router.post('/reset-password', async (req, res, next) => {
         await user.save();
 
         sendTokenResponse(user, 200, res);
+    } catch (err) {
+        next(err);
+    }
+});
+
+// @route   POST /api/auth/forgot-email
+// @desc    Find/Recover email by Register Number or Full Name
+// @access  Public
+router.post('/forgot-email', async (req, res, next) => {
+    try {
+        const { regNumber, name, department } = req.body;
+        
+        let query = {};
+        if (regNumber && regNumber.trim()) {
+            query.regNumber = { $regex: new RegExp(`^${regNumber.trim()}$`, 'i') };
+        } else if (name && name.trim()) {
+            query.name = { $regex: new RegExp(name.trim(), 'i') };
+            if (department && department !== 'All') {
+                query.department = department;
+            }
+        } else {
+            return res.status(400).json({ success: false, error: 'Please provide a Register Number or Full Name' });
+        }
+
+        const user = await User.findOne(query);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'No matching user account found' });
+        }
+
+        res.status(200).json({
+            success: true,
+            email: user.email,
+            name: user.name,
+            regNumber: user.regNumber,
+            department: user.department,
+            message: `Account found for ${user.name}`
+        });
     } catch (err) {
         next(err);
     }

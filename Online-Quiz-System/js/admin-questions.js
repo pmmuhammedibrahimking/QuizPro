@@ -8,7 +8,8 @@ let currentSelectedSubject = 'Python';
 
 document.addEventListener('DOMContentLoaded', () => {
     if (!AuthManager.isAdmin()) {
-        AuthManager.ensureAdminSession();
+        window.location.href = 'admin-login.html';
+        return;
     }
 
     allBank = StorageHelper.getQuestions();

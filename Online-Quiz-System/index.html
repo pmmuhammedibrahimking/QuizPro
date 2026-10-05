@@ -11,186 +11,309 @@
 </head>
 
 <body>
-    <!-- Header Navigation -->
-    <header class="animate-fade-in container">
-        <a href="index.html" class="logo">🎓 QuizPro</a>
+    <!-- Top Header Navigation -->
+    <header class="container">
+        <a href="index.html" class="logo">
+            <span>🎓</span> Quiz<span class="logo-accent">Pro</span>
+            <span class="logo-badge">v2.4</span>
+        </a>
+
         <nav class="main-nav">
-            <a href="dashboard.html" class="btn btn-secondary btn-sm">Dashboard</a>
-            <a href="leaderboard.html" class="btn btn-secondary btn-sm">Leaderboard</a>
-            <a href="admin-dashboard.html" class="btn btn-secondary btn-sm">Admin Panel</a>
-            <button type="button" class="theme-toggle nav-icon-btn" id="themeToggleBtn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme">🌓</button>
-            <div class="user-auth-widget"></div>
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link active">Home</a></li>
+                <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="leaderboard.html" class="nav-link">Leaderboard</a></li>
+                <li><a href="admin-dashboard.html" class="nav-link">Admin Panel</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <button type="button" class="nav-icon-btn" id="themeToggleBtn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme" aria-label="Toggle Theme">🌓</button>
+                <div class="user-auth-widget"></div>
+            </div>
         </nav>
+
         <button type="button" class="quizpro-mobile-toggle" id="quizproMobileToggle" aria-label="Open Mobile Menu">☰</button>
     </header>
 
-    <!-- Mobile Navigation Drawer -->
+    <!-- Mobile Navigation Drawer (Sliding strictly from LEFT) -->
     <div class="quizpro-drawer-overlay" id="quizproDrawerOverlay"></div>
     <aside class="quizpro-mobile-drawer" id="quizproMobileDrawer">
-        <div>
-            <div class="quizpro-drawer-header">
-                <a href="index.html" class="logo">🎓 QuizPro</a>
-                <button type="button" class="quizpro-drawer-close" id="quizproDrawerClose">&times;</button>
-            </div>
-            <div class="quizpro-drawer-nav">
-                <a href="dashboard.html" class="btn btn-primary">Dashboard</a>
-                <a href="leaderboard.html" class="btn btn-secondary">Leaderboard</a>
-                <a href="admin-dashboard.html" class="btn btn-secondary">Admin Panel</a>
-                <a href="index.html" class="btn btn-secondary">Home</a>
-            </div>
-            <div class="nav-auth-container" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                <div class="user-auth-widget"></div>
-                <button type="button" class="theme-toggle nav-icon-btn" onclick="StorageHelper.toggleTheme()" title="Toggle Theme" style="width: 100%; height: 40px; border-radius: 8px; font-size: 1rem;">🌓 Toggle Theme</button>
-            </div>
-        </div>
+        <!-- Populated by AuthManager.updateUI() -->
     </aside>
 
-    <main class="container">
-        <!-- Hero Section -->
-        <section class="hero animate-fade-in" style="animation-delay: 0.1s;">
+    <main>
+        <!-- 1. HERO SECTION -->
+        <section class="container hero animate-fade-in">
             <div class="hero-content">
-                <div class="badge badge-student" style="margin-bottom: 0.75rem;">🚀 BCA Final Year Examination Platform</div>
-                <h1 class="hero-title">Master Your Skills with <span style="color: var(--primary-color)">QuizPro</span></h1>
-                <p class="hero-subtitle">The ultimate online examination platform built with HTML5, CSS Glassmorphism & Vanilla JS. Test your knowledge across multiple academic departments and earn official verified QR certificates.</p>
+                <div class="hero-badge">
+                    <span class="hero-badge-pulse"></span>
+                    <span>🚀 BCA Final Year Examination Platform</span>
+                </div>
+                <h1 class="hero-title">
+                    Master Your Skills with <br />
+                    <span class="gradient-text">QuizPro</span>
+                </h1>
+                <p class="hero-subtitle">
+                    The ultimate online examination platform built with HTML5, CSS & Vanilla JS. Test your knowledge across multiple academic departments, compete on honor leaderboards, and earn verified QR certificates.
+                </p>
                 <div class="hero-buttons">
                     <button type="button" class="btn btn-primary btn-large" onclick="AuthManager.isLoggedIn() ? location.href='dashboard.html' : AuthManager.showAuthModal('signup')">Start Assessment Now</button>
                     <a href="#departments" class="btn btn-secondary btn-large">Browse Departments</a>
                 </div>
             </div>
-            <div class="hero-image">
-                <div style="font-size: 8rem; text-shadow: var(--shadow-hover); animation: floatElement 4s ease-in-out infinite;">🎓</div>
+
+            <!-- Modern SaaS / EdTech Illustration -->
+            <div class="hero-visual-card animate-scale-up">
+                <div class="hero-mock-top">
+                    <div class="hero-mock-dots">
+                        <span class="hero-mock-dot" style="background: #ef4444;"></span>
+                        <span class="hero-mock-dot" style="background: #f59e0b;"></span>
+                        <span class="hero-mock-dot" style="background: #10b981;"></span>
+                    </div>
+                    <span class="badge badge-success">● LIVE EXAM ENGINE</span>
+                </div>
+
+                <div class="hero-mock-stats-row">
+                    <div class="hero-mini-stat">
+                        <span class="hero-mini-stat-label">Active Questions</span>
+                        <span class="hero-mini-stat-val" style="color: var(--primary-color);">500+</span>
+                    </div>
+                    <div class="hero-mini-stat">
+                        <span class="hero-mini-stat-label">Passing Rate</span>
+                        <span class="hero-mini-stat-val" style="color: var(--success-color);">99.8%</span>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg-subtle); border-radius: var(--radius-md); padding: 1.15rem; border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <strong style="font-size: 0.95rem;">Python Programming Assessment</strong>
+                        <span class="badge badge-student">Timed (30s/Q)</span>
+                    </div>
+                    <div style="height: 8px; background: var(--border-color); border-radius: 4px; overflow: hidden; margin: 0.75rem 0;">
+                        <div style="width: 82%; height: 100%; background: var(--primary-gradient);"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.775rem; color: var(--text-secondary);">
+                        <span>Accuracy: <strong>92%</strong></span>
+                        <span>Time: <strong>04:15</strong></span>
+                    </div>
+                </div>
+
+                <div class="hero-floating-card">
+                    <div style="font-size: 1.5rem;">📜</div>
+                    <div style="flex: 1;">
+                        <strong style="font-size: 0.85rem; display: block;">QR Verified Certificate</strong>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Instant PDF generation with ID verification</small>
+                    </div>
+                    <span class="badge badge-success">READY</span>
+                </div>
             </div>
         </section>
 
-        <!-- System Statistics Counter -->
-        <section class="section animate-fade-in" style="animation-delay: 0.15s;">
-            <div class="stats-counter-grid">
-                <div class="stat-card">
-                    <div class="stat-value" style="color: var(--primary-color);">500+</div>
-                    <div class="stat-label">Questions Bank</div>
+        <!-- 2. SYSTEM STATISTICS STRIP (Premium Horizontal Strip) -->
+        <section class="container">
+            <div class="stats-strip animate-fade-in">
+                <div class="stat-strip-item">
+                    <div class="stat-strip-icon">📝</div>
+                    <div>
+                        <div class="stat-strip-val" style="color: var(--primary-color);">500+</div>
+                        <div class="stat-strip-label">Questions Bank</div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" style="color: var(--secondary-color);">10k+</div>
-                    <div class="stat-label">Quizzes Attempted</div>
+                <div class="stat-strip-item">
+                    <div class="stat-strip-icon">👥</div>
+                    <div>
+                        <div class="stat-strip-val" style="color: var(--accent-color);">10K+</div>
+                        <div class="stat-strip-label">Quizzes Attempted</div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" style="color: var(--success-color);">99.8%</div>
-                    <div class="stat-label">System Accuracy</div>
+                <div class="stat-strip-item">
+                    <div class="stat-strip-icon">🎯</div>
+                    <div>
+                        <div class="stat-strip-val" style="color: var(--success-color);">99.8%</div>
+                        <div class="stat-strip-label">System Accuracy</div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" style="color: var(--warning-color);">100%</div>
-                    <div class="stat-label">QR Certificates</div>
+                <div class="stat-strip-item">
+                    <div class="stat-strip-icon">📜</div>
+                    <div>
+                        <div class="stat-strip-val" style="color: var(--warning-color);">100%</div>
+                        <div class="stat-strip-label">QR Certificates</div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Department & Category Explorer -->
-        <section id="departments" class="section animate-fade-in" style="animation-delay: 0.2s;">
-            <h2 class="section-title text-center">Academic Departments & Subjects</h2>
-            <p style="text-align: center; margin-bottom: 1.5rem;">Select your academic department to filter curated subjects and test your expertise.</p>
-            
-            <!-- Department Selection Pills -->
-            <div class="dept-pill-group" id="deptPillGroup">
-                <button class="dept-pill active" onclick="filterDepartment('BCA', this)">BCA</button>
-                <button class="dept-pill" onclick="filterDepartment('BSc', this)">BSc CS/IT</button>
-                <button class="dept-pill" onclick="filterDepartment('BCom CA', this)">BCom CA</button>
-                <button class="dept-pill" onclick="filterDepartment('BBA', this)">BBA</button>
-                <button class="dept-pill" onclick="filterDepartment('BCom', this)">BCom</button>
-                <button class="dept-pill" onclick="filterDepartment('General', this)">General Topics</button>
+        <!-- 3. DEPARTMENT & SUBJECT EXPLORER -->
+        <section id="departments" class="section container">
+            <div class="section-header">
+                <span class="section-badge">Academic Curriculum</span>
+                <h2 class="section-title">Academic Departments & Subjects</h2>
+                <p class="section-subtitle">Select your academic department to filter curated subjects and test your expertise.</p>
             </div>
 
-            <!-- Subject Live Search -->
-            <div style="max-width: 500px; margin: 0 auto 2rem auto;">
-                <input type="text" id="subjectSearchInput" class="form-control" placeholder="🔍 Search subject (e.g. Python, Java, DBMS)..." onkeyup="searchSubjects()" />
+            <!-- Department Selection Pills & Live Search -->
+            <div class="filter-bar-container">
+                <div class="dept-pill-group" id="deptPillGroup">
+                    <button type="button" class="dept-pill active" onclick="filterDepartment('BCA', this)">BCA</button>
+                    <button type="button" class="dept-pill" onclick="filterDepartment('BSc', this)">BSc CS/IT</button>
+                    <button type="button" class="dept-pill" onclick="filterDepartment('BCom CA', this)">BCom CA</button>
+                    <button type="button" class="dept-pill" onclick="filterDepartment('BBA', this)">BBA</button>
+                    <button type="button" class="dept-pill" onclick="filterDepartment('BCom', this)">BCom</button>
+                    <button type="button" class="dept-pill" onclick="filterDepartment('General', this)">General Topics</button>
+                </div>
+
+                <div class="search-box-wrapper">
+                    <span class="search-icon-inside">🔍</span>
+                    <input type="text" id="subjectSearchInput" class="form-control" placeholder="Search subject (e.g. Python, Java, DBMS)..." oninput="searchSubjects()" />
+                </div>
             </div>
 
             <!-- Dynamic Subject Cards Grid -->
-            <div class="features-grid" id="subjectCardsGrid">
-                <!-- Dynamically populated -->
+            <div class="subjects-grid" id="subjectCardsGrid">
+                <!-- Dynamically populated via JS -->
             </div>
         </section>
 
-        <!-- Features Grid -->
-        <section id="features" class="features section animate-fade-in" style="animation-delay: 0.25s;">
-            <h2 class="section-title">Platform Features</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">⏱️</div>
-                    <h3>Timed Examinations</h3>
-                    <p>Simulate real exam pressure with custom question timers, warning rings, and anti-cheating fullscreen modes.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Performance Analytics</h3>
-                    <p>Comprehensive result breakdowns with Canvas charts, subject accuracy metrics, and class rank estimation.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📜</div>
-                    <h3>QR Verified Certificates</h3>
-                    <p>Earn high-resolution printable certificates embedded with unique Certificate IDs and verification QR codes.</p>
-                </div>
+        <!-- 4. PLATFORM FEATURES (3 Core Features) -->
+        <section id="features" class="section container">
+            <div class="section-header">
+                <span class="section-badge">Enterprise Engine</span>
+                <h2 class="section-title">Platform Features</h2>
+                <p class="section-subtitle">Everything you need for structured, fair, and seamless academic assessments.</p>
             </div>
-        </section>
 
-        <!-- Testimonials -->
-        <section class="section animate-fade-in" style="animation-delay: 0.3s;">
-            <h2 class="section-title text-center">Student Feedback</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <p><i>"QuizPro made preparing for our BCA final exams so structured! The instant question review and explanations helped me clear core concepts."</i></p>
-                    <strong style="color: var(--primary-color);">- Rohan Sharma (BCA Student)</strong>
+            <div class="features-grid-6" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+                <div class="feature-box">
+                    <div class="feature-box-icon">⏱️</div>
+                    <h3 class="feature-box-title">Timed Examinations</h3>
+                    <p class="feature-box-desc">Simulate real exam pressure with custom question timers, audio warning rings, and anti-cheating fullscreen modes.</p>
                 </div>
-                <div class="feature-card">
-                    <p><i>"The UI is gorgeous! Glassmorphism with dark mode looks like a modern SaaS platform. The downloadable PDF certificate is awesome."</i></p>
-                    <strong style="color: var(--secondary-color);">- Ananya V. (BSc CS Student)</strong>
+                <div class="feature-box">
+                    <div class="feature-box-icon">📊</div>
+                    <h3 class="feature-box-title">Performance Analytics</h3>
+                    <p class="feature-box-desc">Comprehensive result breakdowns with HTML5 Canvas charts, subject accuracy metrics, and class rank estimation.</p>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-box-icon">📜</div>
+                    <h3 class="feature-box-title">QR Verified Certificates</h3>
+                    <p class="feature-box-desc">Earn high-resolution printable certificates embedded with unique Certificate IDs and verification QR codes upon 50%+ score.</p>
                 </div>
             </div>
         </section>
 
-        <!-- FAQ Accordion -->
-        <section id="faq" class="section animate-fade-in" style="animation-delay: 0.35s;">
-            <div class="card">
-                <h2 style="text-align: center; margin-bottom: 1.5rem;">Frequently Asked Questions</h2>
-                <div class="faq-item" style="border-bottom: 1px solid var(--border-color); padding: 1rem 0;">
-                    <h4 style="cursor: pointer; display: flex; justify-content: space-between;" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">Is QuizPro free to use for students? <span>▼</span></h4>
-                    <p style="display: none; margin-top: 0.5rem;">Yes! QuizPro is 100% open-source and free for all students, faculty, and departments.</p>
-                </div>
-                <div class="faq-item" style="border-bottom: 1px solid var(--border-color); padding: 1rem 0;">
-                    <h4 style="cursor: pointer; display: flex; justify-content: space-between;" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">How do I download my completion certificate? <span>▼</span></h4>
-                    <p style="display: none; margin-top: 0.5rem;">After achieving a passing score (50%+), you can view and download your verified PDF certificate directly from the result page or dashboard.</p>
-                </div>
+        <!-- 5. STUDENT FEEDBACK (Testimonials) -->
+        <section class="section container">
+            <div class="section-header">
+                <span class="section-badge">Student Reviews</span>
+                <h2 class="section-title">Student Feedback</h2>
+                <p class="section-subtitle">Read how students across departments use QuizPro to prepare for semester exams.</p>
             </div>
-        </section>
 
-        <!-- Contact Section -->
-        <section id="contact" class="section animate-fade-in" style="animation-delay: 0.4s;">
-            <div class="card" style="max-width: 600px; margin: 0 auto;">
-                <h2 style="text-align: center;">Get in Touch</h2>
-                <form onsubmit="event.preventDefault(); alert('Thank you for your message! Our team will respond shortly.'); this.reset();">
-                    <div class="form-group">
-                        <label class="form-label">Name</label>
-                        <input type="text" class="form-control" placeholder="Your name" required />
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div>
+                        <div class="test-stars">★★★★★</div>
+                        <p class="test-quote">"QuizPro made preparing for our BCA final exams so structured! The instant question review and explanations helped me clear core concepts."</p>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" placeholder="yourname@domain.com" required />
+                    <div class="test-author-row">
+                        <div class="test-avatar">RS</div>
+                        <div>
+                            <strong style="font-size: 0.9rem; display: block; color: var(--primary-color);">Rohan Sharma</strong>
+                            <small style="color: var(--text-secondary);">BCA Final Year Student</small>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Message</label>
-                        <textarea class="form-control" rows="4" placeholder="How can we help you?" required></textarea>
+                </div>
+
+                <div class="testimonial-card">
+                    <div>
+                        <div class="test-stars">★★★★★</div>
+                        <p class="test-quote">"The UI is gorgeous! Glassmorphism with dark mode looks like a modern SaaS platform. The downloadable PDF certificate is awesome."</p>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">Send Message</button>
-                </form>
+                    <div class="test-author-row">
+                        <div class="test-avatar">AV</div>
+                        <div>
+                            <strong style="font-size: 0.9rem; display: block; color: var(--accent-color);">Ananya V.</strong>
+                            <small style="color: var(--text-secondary);">BSc CS Student</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div>
+                        <div class="test-stars">★★★★★</div>
+                        <p class="test-quote">"The department filtering and live search made finding subject assessments quick. Real-time timer pressure prepared me well for practical exams."</p>
+                    </div>
+                    <div class="test-author-row">
+                        <div class="test-avatar">KP</div>
+                        <div>
+                            <strong style="font-size: 0.9rem; display: block; color: var(--success-color);">Karthik Patel</strong>
+                            <small style="color: var(--text-secondary);">BCom CA Student</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. FREQUENTLY ASKED QUESTIONS (Accordion) -->
+        <section id="faq" class="section container">
+            <div class="section-header">
+                <span class="section-badge">FAQ</span>
+                <h2 class="section-title">Frequently Asked Questions</h2>
+                <p class="section-subtitle">Common questions regarding online assessment procedures, scoring, and certificates.</p>
+            </div>
+
+            <div class="faq-accordion-box">
+                <div class="faq-item active">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>Is QuizPro free to use for students?</span>
+                        <span class="faq-chevron">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Yes! QuizPro is 100% open-source and free for all students, faculty, and departments across all university courses.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>How do I download my completion certificate?</span>
+                        <span class="faq-chevron">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        After achieving a passing score (50%+), you can view, print, and download your official verified PDF certificate directly from the result page or student dashboard.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>Can I retake an assessment if I want to improve my score?</span>
+                        <span class="faq-chevron">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Yes! You can retake any subject quiz unlimited times. Your highest score and accuracy will reflect on your profile and the honor leaderboard.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>Is QuizPro accessible on mobile phones and tablets?</span>
+                        <span class="faq-chevron">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Yes, QuizPro is completely responsive with touch-optimized interfaces, smooth left-sliding mobile menus, and full-screen examination modes on all screen sizes.
+                    </div>
+                </div>
             </div>
         </section>
     </main>
 
+    <!-- 7. FOOTER -->
     <footer class="footer">
         <div class="container text-center">
             <p>&copy; 2026 QuizPro - BCA Final Year Examination System | All Rights Reserved.</p>
-            <p style="margin-top: 0.5rem;">
-                <a href="javascript:void(0)" onclick="AuthManager.showAuthModal('admin')">Admin Login</a> | 
-                <a href="settings.html">Platform Settings</a>
+            <p style="margin-top: 0.75rem; font-size: 0.875rem;">
+                <a href="admin-login.html" style="margin-right: 0.75rem;">🛡️ Admin Login</a> | 
+                <a href="settings.html" style="margin: 0 0.75rem;">⚙️ Platform Settings</a> |
+                <a href="leaderboard.html" style="margin-left: 0.75rem;">🏆 Leaderboard</a>
             </p>
         </div>
     </footer>
@@ -205,20 +328,71 @@
     <script>
         let currentDept = 'BCA';
 
+        const subjectIconMap = {
+            'Python': '🐍',
+            'Java': '☕',
+            'DataStructures': '🌳',
+            'DBMS': '🗄️',
+            'HTML': '🌐',
+            'CSS': '🎨',
+            'JavaScript': '⚡',
+            'GeneralKnowledge': '🧠',
+            'Accounting': '📊',
+            'BusinessAdmin': '📈',
+            'BCA': '💻',
+            'BSc': '🔬',
+            'BComCA': '📑',
+            'BBA': '💼'
+        };
+
+        const subjectDescMap = {
+            'Python': 'Core syntax, OOP, lambdas, and data structures.',
+            'Java': 'JVM architecture, classes, interfaces, and threads.',
+            'DataStructures': 'Stacks, queues, trees, graphs, and algorithms.',
+            'DBMS': 'SQL queries, normalization, and ACID transactions.',
+            'HTML': 'HTML5 semantic elements, forms, and accessibility.',
+            'CSS': 'Flexbox, Grid layouts, box models, and animations.',
+            'JavaScript': 'ES6+ syntax, asynchronous promises, and DOM.',
+            'GeneralKnowledge': 'Computing history, innovations, and logic.',
+            'Accounting': 'Financial statements, double-entry, and tally.',
+            'BusinessAdmin': 'Principles of management, SWOT, and marketing.',
+            'BCA': 'Comprehensive software engineering and OS.',
+            'BSc': 'Theory of computation, discrete math, and networks.'
+        };
+
         function renderSubjects() {
             const grid = document.getElementById('subjectCardsGrid');
             if (!grid) return;
 
-            const subjects = DepartmentSubjects[currentDept] || DepartmentSubjects['BCA'];
+            const subjects = (typeof DepartmentSubjects !== 'undefined' && DepartmentSubjects[currentDept]) 
+                ? DepartmentSubjects[currentDept] 
+                : ['Python', 'Java', 'DataStructures', 'DBMS', 'HTML', 'CSS', 'JavaScript'];
+
             grid.innerHTML = '';
 
             subjects.forEach(sub => {
+                const icon = subjectIconMap[sub] || '📚';
+                const desc = subjectDescMap[sub] || 'Curated examination covering key curriculum concepts.';
                 const card = document.createElement('div');
-                card.className = 'feature-card animate-scale-up';
+                card.className = 'subject-card animate-fade-in';
                 card.innerHTML = `
-                    <div class="feature-icon">📚</div>
-                    <h3>${sub}</h3>
-                    <button class="btn btn-primary btn-sm btn-block" style="margin-top: 1rem" onclick="selectQuizSubject('${sub}')">Start ${sub} Quiz</button>
+                    <div>
+                        <div class="subject-card-top">
+                            <div class="subject-icon-box">${icon}</div>
+                            <span class="badge badge-student">Curriculum</span>
+                        </div>
+                        <h3 class="subject-name">${StorageHelper.escapeHTML(sub)}</h3>
+                        <p class="subject-desc">${desc}</p>
+                    </div>
+                    <div>
+                        <div class="subject-meta-row">
+                            <span>📝 10-15 Questions</span>
+                            <span>⏱️ 30s / Q</span>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-block" onclick="selectQuizSubject('${sub}')">
+                            Start ${StorageHelper.escapeHTML(sub)} Quiz →
+                        </button>
+                    </div>
                 `;
                 grid.appendChild(card);
             });
@@ -231,18 +405,19 @@
 
         function filterDepartment(dept, el) {
             currentDept = dept;
-            const pills = document.querySelectorAll('.dept-pill');
+            const pills = document.querySelectorAll('#deptPillGroup .dept-pill');
             pills.forEach(p => p.classList.remove('active'));
             if (el) el.classList.add('active');
             renderSubjects();
         }
 
         function searchSubjects() {
-            const query = document.getElementById('subjectSearchInput').value.toLowerCase();
-            const cards = document.querySelectorAll('#subjectCardsGrid .feature-card');
+            const query = (document.getElementById('subjectSearchInput')?.value || '').toLowerCase().trim();
+            const cards = document.querySelectorAll('#subjectCardsGrid .subject-card');
             cards.forEach(card => {
-                const title = card.querySelector('h3').innerText.toLowerCase();
-                card.style.display = title.includes(query) ? 'block' : 'none';
+                const title = card.querySelector('.subject-name')?.innerText.toLowerCase() || '';
+                const desc = card.querySelector('.subject-desc')?.innerText.toLowerCase() || '';
+                card.style.display = (title.includes(query) || desc.includes(query)) ? 'flex' : 'none';
             });
         }
 
@@ -255,7 +430,20 @@
             window.location.href = 'instructions.html';
         }
 
+        function toggleFaq(headerEl) {
+            const item = headerEl.parentElement;
+            const isActive = item.classList.contains('active');
+            document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+            if (!isActive) {
+                item.classList.add('active');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            StorageHelper.applyTheme();
+            if (typeof AuthManager !== 'undefined') {
+                AuthManager.updateUI();
+            }
             renderSubjects();
         });
     </script>

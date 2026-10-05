@@ -12,21 +12,22 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add an email'],
         unique: true,
+        trim: true,
+        lowercase: true,
         match: [
-            /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+            /^\S+@\S+\.\S+$/,
             'Please add a valid email'
         ]
     },
     password: {
         type: String,
         required: [true, 'Please add a password'],
-        minlength: 6,
         select: false
     },
     role: {
         type: String,
-        enum: ['user', 'admin'],
-        default: 'user'
+        enum: ['user', 'student', 'admin', 'guest'],
+        default: 'student'
     },
     regNumber: {
         type: String,
@@ -52,10 +53,11 @@ const UserSchema = new mongoose.Schema({
 // Encrypt password using bcrypt before saving
 UserSchema.pre('save', async function(next) {
     if (!this.isModified('password')) {
-        next();
+        return next();
     }
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+    next();
 });
 
 // Sign JWT and return token
@@ -69,6 +71,7 @@ UserSchema.methods.getSignedJwtToken = function() {
 
 // Match user entered password to hashed password in database
 UserSchema.methods.matchPassword = async function(enteredPassword) {
+    if (!enteredPassword || !this.password) return false;
     return await bcrypt.compare(enteredPassword, this.password);
 };
 

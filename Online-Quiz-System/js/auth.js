@@ -23,9 +23,18 @@ const AuthManager = {
         return user && (user.role === 'admin' || user.isAdmin === true);
     },
 
-    ensureAdminSession: function () {
-        if (!this.isAdmin()) {
-            const seedAdmin = {
+    ensureSeedUsers: function () {
+        let users = [];
+        try {
+            users = JSON.parse(localStorage.getItem('quizUsers')) || [];
+        } catch (e) { users = []; }
+
+        const adminIndex = users.findIndex(u => (u.email && u.email.toLowerCase() === 'admin@quizpro.com') || u.role === 'admin' || u.regNumber === 'ADMIN001');
+        const demoIndex = users.findIndex(u => (u.email && u.email.toLowerCase() === 'student@quizpro.com') || (u.regNumber && u.regNumber.toUpperCase() === 'BCA202601'));
+
+        let modified = false;
+        if (adminIndex === -1) {
+            users.unshift({
                 id: 'usr_admin',
                 name: 'System Admin',
                 regNumber: 'ADMIN001',
@@ -33,46 +42,149 @@ const AuthManager = {
                 email: 'admin@quizpro.com',
                 password: 'admin',
                 role: 'admin',
+                isAdmin: true,
                 createdAt: new Date().toISOString()
-            };
-            if (typeof StorageHelper !== 'undefined') {
-                StorageHelper.saveUser(seedAdmin);
-            } else {
-                localStorage.setItem('currentUser', JSON.stringify(seedAdmin));
+            });
+            modified = true;
+        } else {
+            // Guarantee admin password and privileges remain valid
+            if (users[adminIndex].password !== 'admin' || users[adminIndex].role !== 'admin' || !users[adminIndex].isAdmin) {
+                users[adminIndex].password = 'admin';
+                users[adminIndex].role = 'admin';
+                users[adminIndex].isAdmin = true;
+                modified = true;
             }
-            this.updateUI();
         }
+
+        if (demoIndex === -1) {
+            users.push({
+                id: 'usr_demo',
+                name: 'Sample Student',
+                regNumber: 'BCA202601',
+                department: 'BCA',
+                email: 'student@quizpro.com',
+                password: 'student',
+                role: 'student',
+                createdAt: new Date().toISOString()
+            });
+            modified = true;
+        } else {
+            // Guarantee demo student credentials and role remain valid
+            if (users[demoIndex].password !== 'student' || users[demoIndex].role !== 'student' || users[demoIndex].email !== 'student@quizpro.com') {
+                users[demoIndex].password = 'student';
+                users[demoIndex].role = 'student';
+                users[demoIndex].email = 'student@quizpro.com';
+                users[demoIndex].regNumber = users[demoIndex].regNumber || 'BCA202601';
+                users[demoIndex].department = users[demoIndex].department || 'BCA';
+                modified = true;
+            }
+        }
+
+        if (modified) {
+            localStorage.setItem('quizUsers', JSON.stringify(users));
+        }
+    },
+
+    ensureAdminSession: function () {
+        const seedAdmin = {
+            id: 'usr_admin',
+            name: 'System Admin',
+            regNumber: 'ADMIN001',
+            department: 'BCA',
+            email: 'admin@quizpro.com',
+            password: 'admin',
+            role: 'admin',
+            isAdmin: true,
+            createdAt: new Date().toISOString()
+        };
+        if (typeof StorageHelper !== 'undefined') {
+            StorageHelper.saveUser(seedAdmin);
+        } else {
+            localStorage.setItem('currentUser', JSON.stringify(seedAdmin));
+        }
+        this.ensureSeedUsers();
+        this.updateUI();
         return true;
     },
 
     // Student / Admin Registration
     register: async function (userData) {
+        this.ensureSeedUsers();
+
+        const cleanName = (userData.name || '').trim();
+        const cleanEmail = (userData.email || '').trim().toLowerCase();
+        const cleanPass = (userData.password || '').trim();
+        const cleanReg = (userData.regNumber || '').trim() || ('BCA' + Math.floor(100000 + Math.random() * 900000));
+        const cleanDept = userData.department || 'BCA';
+        const role = userData.role || 'student';
+
+        if (!cleanName) {
+            return { success: false, error: 'Please enter your full name.' };
+        }
+        if (!cleanEmail || !cleanEmail.includes('@')) {
+            return { success: false, error: 'Please enter a valid email address.' };
+        }
+        if (!cleanPass) {
+            return { success: false, error: 'Please enter a password.' };
+        }
+
+        // Local duplicate check
+        let users = JSON.parse(localStorage.getItem('quizUsers')) || [];
+        const existing = users.find(u => (u.email || '').toLowerCase().trim() === cleanEmail);
+        if (existing) {
+            return { 
+                success: false, 
+                error: `An account with email <strong>${cleanEmail}</strong> already exists. <a href="javascript:void(0)" onclick="AuthManager.switchTab('login', {email: '${cleanEmail}'})" style="color: inherit; text-decoration: underline; font-weight: 700;">Click here to Log In &rarr;</a>` 
+            };
+        }
+
         // First try backend API if available
         if (typeof API !== 'undefined') {
-            const apiRes = await API.register(userData);
-            if (apiRes && apiRes.success) {
-                API.setToken(apiRes.token);
-                StorageHelper.saveUser(apiRes.user || apiRes.data);
-                this.updateUI();
-                return { success: true, user: apiRes.user || apiRes.data };
+            try {
+                const apiRes = await API.register({
+                    name: cleanName,
+                    email: cleanEmail,
+                    password: cleanPass,
+                    regNumber: cleanReg,
+                    department: cleanDept,
+                    role: role
+                });
+                if (apiRes && apiRes.success) {
+                    API.setToken(apiRes.token);
+                    const backendUser = apiRes.user || apiRes.data;
+                    const finalUser = {
+                        ...backendUser,
+                        role: backendUser.role || role,
+                        isAdmin: (backendUser.role === 'admin' || role === 'admin')
+                    };
+                    StorageHelper.saveUser(finalUser);
+                    // Sync with local users cache
+                    if (!users.some(u => (u.email || '').toLowerCase().trim() === cleanEmail)) {
+                        users.push({ ...finalUser, password: cleanPass });
+                        localStorage.setItem('quizUsers', JSON.stringify(users));
+                    }
+                    this.updateUI();
+                    return { success: true, user: finalUser };
+                } else if (apiRes && !apiRes.success && apiRes.error && !apiRes.error.includes('offline') && !apiRes.error.includes('Network error') && !apiRes.error.includes('Failed to fetch')) {
+                    if (apiRes.error.includes('maximum limit') || apiRes.error.includes('already exists')) {
+                        return { success: false, error: apiRes.error };
+                    }
+                }
+            } catch (err) {
+                console.warn('API register error, falling back to local storage:', err);
             }
         }
 
-        // LocalStorage Fallback & Synchronize
-        let users = JSON.parse(localStorage.getItem('quizUsers')) || [];
-        const existing = users.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
-        if (existing) {
-            return { success: false, error: 'User with this email already exists' };
-        }
-
+        // LocalStorage Fallback & Save
         const newUser = {
             id: 'usr_' + Date.now(),
-            name: userData.name,
-            regNumber: userData.regNumber || 'REG' + Math.floor(100000 + Math.random() * 900000),
-            department: userData.department || 'BCA',
-            email: userData.email,
-            password: userData.password,
-            role: userData.role || 'student',
+            name: cleanName,
+            regNumber: cleanReg,
+            department: cleanDept,
+            email: cleanEmail,
+            password: cleanPass,
+            role: role,
+            isAdmin: (role === 'admin'),
             createdAt: new Date().toISOString()
         };
 
@@ -87,60 +199,105 @@ const AuthManager = {
 
     // Student / Admin Login
     login: async function (email, password, rememberMe = false) {
+        this.ensureSeedUsers();
+
+        const cleanInput = (email || '').trim();
+        const cleanInputLower = cleanInput.toLowerCase();
+        const rawPass = password !== undefined && password !== null ? String(password) : '';
+        const cleanPass = rawPass.trim();
+
+        if (!cleanInput || !cleanPass) {
+            return { success: false, error: 'Please enter both your email / register number and password.' };
+        }
+
+        // 1. Try Backend API first if available
         if (typeof API !== 'undefined') {
-            const apiRes = await API.login({ email, password });
-            if (apiRes && apiRes.success) {
-                API.setToken(apiRes.token);
-                StorageHelper.saveUser(apiRes.user || apiRes.data);
-                this.updateUI();
-                return { success: true, user: apiRes.user || apiRes.data };
+            try {
+                const apiRes = await API.login({ email: cleanInput, password: cleanPass });
+                if (apiRes && apiRes.success) {
+                    API.setToken(apiRes.token);
+                    const backendUser = apiRes.user || apiRes.data;
+                    const finalUser = {
+                        ...backendUser,
+                        role: backendUser.role || 'student',
+                        isAdmin: (backendUser.role === 'admin')
+                    };
+                    StorageHelper.saveUser(finalUser);
+                    if (rememberMe) {
+                        localStorage.setItem('rememberedUser', finalUser.email || cleanInput);
+                    } else {
+                        localStorage.removeItem('rememberedUser');
+                    }
+                    this.updateUI();
+                    return { success: true, user: finalUser };
+                }
+            } catch (apiErr) {
+                console.warn('API login request error:', apiErr);
             }
         }
 
-        // Local Storage checking
-        let users = JSON.parse(localStorage.getItem('quizUsers')) || [];
+        // 2. Local Storage Auth Checking
+        let users = [];
+        try {
+            users = JSON.parse(localStorage.getItem('quizUsers')) || [];
+        } catch (e) { users = []; }
 
-        // Default seed accounts if none exist
-        if (users.length === 0) {
-            users = [
-                {
-                    id: 'usr_admin',
-                    name: 'System Admin',
-                    regNumber: 'ADMIN001',
-                    department: 'BCA',
-                    email: 'admin@quizpro.com',
-                    password: 'admin',
-                    role: 'admin',
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: 'usr_demo',
-                    name: 'Sample Student',
-                    regNumber: 'BCA202601',
-                    department: 'BCA',
-                    email: 'student@quizpro.com',
-                    password: 'student',
-                    role: 'student',
-                    createdAt: new Date().toISOString()
-                }
-            ];
-            localStorage.setItem('quizUsers', JSON.stringify(users));
+        // Find registered user by Email, Register Number, or 'admin' identifier
+        const matchingUser = users.find(u => {
+            const uEmail = (u.email || '').toLowerCase().trim();
+            const uReg = (u.regNumber || '').toLowerCase().trim();
+            return (uEmail === cleanInputLower) || 
+                   (uReg === cleanInputLower) ||
+                   (cleanInputLower === 'admin' && (u.role === 'admin' || u.isAdmin || uEmail === 'admin@quizpro.com'));
+        });
+
+        if (!matchingUser) {
+            return { 
+                success: false, 
+                error: `Account not found. Please check your email/register number or create an account.<br/><a href="javascript:void(0)" onclick="AuthManager.switchTab('signup', {email: '${StorageHelper.escapeHTML(cleanInput)}'})" style="color: inherit; text-decoration: underline; font-weight: 700; margin-top: 5px; display: inline-block;">👉 Click here to create a new Student Account</a>` 
+            };
         }
 
-        const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-        if (!user) {
-            return { success: false, error: 'Invalid email or password' };
+        // Compare entered password with stored password
+        const storedPass = matchingUser.password || '';
+        const isPasswordCorrect = (storedPass === cleanPass) || (storedPass === rawPass) || (storedPass.trim() === cleanPass);
+
+        if (!isPasswordCorrect) {
+            return { 
+                success: false, 
+                error: `Incorrect password entered. <a href="javascript:void(0)" onclick="AuthManager.switchTab('forgot-password', {email: '${matchingUser.email || cleanInputLower}'})" style="color: inherit; text-decoration: underline; font-weight: 700; margin-left: 4px;">Forgot Password?</a>` 
+            };
         }
 
-        StorageHelper.saveUser(user);
+        // Build authenticated user object
+        const finalUser = {
+            ...matchingUser,
+            role: matchingUser.role || 'student',
+            isAdmin: (matchingUser.role === 'admin' || matchingUser.isAdmin === true)
+        };
+
+        StorageHelper.saveUser(finalUser);
         if (rememberMe) {
-            localStorage.setItem('rememberedUser', email);
+            localStorage.setItem('rememberedUser', finalUser.email || cleanInput);
         } else {
             localStorage.removeItem('rememberedUser');
         }
 
         this.updateUI();
-        return { success: true, user };
+        return { success: true, user: finalUser };
+    },
+
+    fillDemoStudent: function () {
+        this.ensureSeedUsers();
+        const emailInput = document.getElementById('loginEmail');
+        const passInput = document.getElementById('loginPass');
+        if (emailInput) emailInput.value = 'student@quizpro.com';
+        if (passInput) passInput.value = 'student';
+        const alertBox = document.getElementById('authAlert');
+        if (alertBox) {
+            alertBox.style.display = 'none';
+            alertBox.innerHTML = '';
+        }
     },
 
     // Guest Mode
@@ -160,50 +317,131 @@ const AuthManager = {
         return guestUser;
     },
 
+    // Forgot Email Trigger - Find email by Reg Number or Name
+    forgotEmail: async function (identifier) {
+        if (!identifier || !identifier.trim()) {
+            return { success: false, error: 'Please enter your Register Number or Full Name.' };
+        }
+
+        const query = identifier.trim().toLowerCase();
+        this.ensureSeedUsers();
+
+        // Check backend API first if available
+        if (typeof API !== 'undefined' && API.forgotEmail) {
+            try {
+                const apiRes = await API.forgotEmail({ regNumber: query, name: query });
+                if (apiRes && apiRes.success) return apiRes;
+            } catch (e) {
+                // Ignore and use local storage fallback
+            }
+        }
+
+        // Local Storage fallback & checking
+        let users = JSON.parse(localStorage.getItem('quizUsers')) || [];
+        const user = users.find(u => {
+            const uReg = (u.regNumber || '').toLowerCase();
+            const uName = (u.name || '').toLowerCase();
+            const uEmail = (u.email || '').toLowerCase();
+            return uReg === query || uName === query || uName.includes(query) || uEmail.startsWith(query);
+        });
+
+        if (!user) {
+            return { success: false, error: `No student account found matching "<strong>${StorageHelper.escapeHTML(identifier)}</strong>".` };
+        }
+
+        return {
+            success: true,
+            email: user.email,
+            name: user.name,
+            regNumber: user.regNumber || 'N/A',
+            department: user.department || 'BCA',
+            message: `Account located for ${user.name}!`
+        };
+    },
+
     // Forgot Password Trigger
     forgotPassword: async function (email) {
-        if (typeof API !== 'undefined') {
-            const apiRes = await API.forgotPassword(email);
-            if (apiRes && apiRes.success) return apiRes;
+        if (!email || !email.trim()) {
+            return { success: false, error: 'Please enter your registered email address.' };
+        }
+
+        const cleanEmail = email.trim().toLowerCase();
+        this.ensureSeedUsers();
+
+        if (typeof API !== 'undefined' && API.forgotPassword) {
+            try {
+                const apiRes = await API.forgotPassword(cleanEmail);
+                if (apiRes && apiRes.success) return apiRes;
+            } catch (e) {
+                // Fallback
+            }
         }
 
         let users = JSON.parse(localStorage.getItem('quizUsers')) || [];
-        const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+        const user = users.find(u => (u.email || '').toLowerCase() === cleanEmail);
         if (!user) {
-            return { success: false, error: 'No account found with this email address' };
+            return { success: false, error: `No account found with email <strong>${StorageHelper.escapeHTML(cleanEmail)}</strong>.` };
         }
 
         const dummyResetToken = 'rst_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('resetToken_' + dummyResetToken, email);
+        localStorage.setItem('resetToken_' + dummyResetToken, user.email);
         return {
             success: true,
-            message: 'Password reset link sent! Demonstration Reset Token: ' + dummyResetToken,
-            token: dummyResetToken
+            message: `Account verified for ${user.name}! Please enter your new password below.`,
+            token: dummyResetToken,
+            email: user.email,
+            name: user.name
         };
     },
 
     // Reset Password Execution
-    resetPassword: async function (token, newPassword) {
-        if (typeof API !== 'undefined') {
-            const apiRes = await API.resetPassword(token, newPassword);
-            if (apiRes && apiRes.success) return apiRes;
+    resetPassword: async function (tokenOrEmail, newPassword) {
+        if (!newPassword) {
+            return { success: false, error: 'Please enter a new password.' };
         }
 
-        const email = localStorage.getItem('resetToken_' + token);
-        if (!email) {
-            return { success: false, error: 'Invalid or expired password reset token' };
+        const targetEmail = (tokenOrEmail || '').trim().toLowerCase();
+
+        if (typeof API !== 'undefined' && API.resetPassword) {
+            try {
+                const apiRes = await API.resetPassword(targetEmail, newPassword);
+                if (apiRes && apiRes.success) {
+                    // Success on API
+                }
+            } catch (e) {
+                // Ignore and use local storage fallback
+            }
         }
 
         let users = JSON.parse(localStorage.getItem('quizUsers')) || [];
-        const idx = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+        const tokenEmail = localStorage.getItem('resetToken_' + tokenOrEmail);
+        const searchEmail = (tokenEmail || targetEmail).toLowerCase();
+
+        const idx = users.findIndex(u => (u.email || '').toLowerCase() === searchEmail);
         if (idx !== -1) {
             users[idx].password = newPassword;
             localStorage.setItem('quizUsers', JSON.stringify(users));
-            localStorage.removeItem('resetToken_' + token);
-            return { success: true, message: 'Password reset successfully! Please login with your new password.' };
+            if (tokenEmail) localStorage.removeItem('resetToken_' + tokenOrEmail);
+
+            // Also update active session if this user is currently logged in
+            const curUser = StorageHelper.getUser();
+            if (curUser && (curUser.email || '').toLowerCase() === searchEmail) {
+                curUser.password = newPassword;
+                StorageHelper.saveUser(curUser);
+            }
+
+            return { 
+                success: true, 
+                email: users[idx].email,
+                message: `Password updated successfully for <strong>${users[idx].email}</strong>! You can now log in.` 
+            };
         }
-        return { success: false, error: 'User account not found' };
+        return { success: false, error: 'No account found with this email address.' };
     },
+
+    // SVG Icons for Password Visibility
+    eyeSvg: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
+    eyeOffSvg: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`,
 
     // Toggle Password Visibility
     togglePasswordVisibility: function (inputId, btnEl) {
@@ -211,10 +449,10 @@ const AuthManager = {
         if (!input) return;
         if (input.type === 'password') {
             input.type = 'text';
-            if (btnEl) btnEl.innerText = '🙈';
+            if (btnEl) btnEl.innerHTML = this.eyeOffSvg;
         } else {
             input.type = 'password';
-            if (btnEl) btnEl.innerText = '👁️';
+            if (btnEl) btnEl.innerHTML = this.eyeSvg;
         }
     },
 
@@ -425,6 +663,34 @@ const AuthManager = {
     },
 
     bindEvents: function () {
+        // Universal Left-Sliding Mobile Drawer handlers
+        const toggleBtn = document.getElementById('quizproMobileToggle');
+        const drawer = document.getElementById('quizproMobileDrawer');
+        const overlay = document.getElementById('quizproDrawerOverlay');
+        const closeBtn = document.getElementById('quizproDrawerClose');
+
+        if (toggleBtn) {
+            toggleBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (drawer) drawer.classList.add('active');
+                if (overlay) overlay.classList.add('active');
+            };
+        }
+
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                if (drawer) drawer.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+            };
+        }
+
+        if (overlay) {
+            overlay.onclick = () => {
+                if (drawer) drawer.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+            };
+        }
+
         // Register document-wide listeners only ONCE to prevent listener duplication
         if (!this._listenersBound) {
             this._listenersBound = true;
@@ -440,6 +706,9 @@ const AuthManager = {
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     document.querySelectorAll('.profile-dropdown-menu.show').forEach(m => m.classList.remove('show'));
+                    if (drawer) drawer.classList.remove('active');
+                    if (overlay) overlay.classList.remove('active');
+                    this.closeAuthModal();
                 }
             });
         }
@@ -487,92 +756,205 @@ const AuthManager = {
         }
 
         modal.innerHTML = `
-            <div class="modal-card animate-scale-up">
-                <button class="modal-close-btn" onclick="AuthManager.closeAuthModal()">&times;</button>
-                <div class="auth-tabs">
-                    <button class="auth-tab ${initialTab === 'login' ? 'active' : ''}" onclick="AuthManager.switchTab('login')">Student Login</button>
-                    <button class="auth-tab ${initialTab === 'signup' ? 'active' : ''}" onclick="AuthManager.switchTab('signup')">Student Signup</button>
-                    <button class="auth-tab ${initialTab === 'admin' ? 'active' : ''}" onclick="AuthManager.switchTab('admin')">Admin Login</button>
+            <div class="modal-card-split animate-scale-up">
+                <!-- Left Brand Side (Desktop) -->
+                <div class="auth-brand-side">
+                    <div>
+                        <div style="font-size: 2.25rem; margin-bottom: 0.5rem;">🎓</div>
+                        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.6rem; margin-bottom: 0.5rem;">QuizPro Portal</h3>
+                        <p style="font-size: 0.9rem; opacity: 0.9;">India's smart online assessment & examination platform for academic mastery.</p>
+                    </div>
+
+                    <ul class="auth-perk-list">
+                        <li class="auth-perk-item"><span>⚡</span> 500+ Curated Question Bank</li>
+                        <li class="auth-perk-item"><span>📊</span> Real-Time Analytics & Accuracy</li>
+                        <li class="auth-perk-item"><span>📜</span> Official QR Verified Certificates</li>
+                        <li class="auth-perk-item"><span>🏆</span> Inter-Department Leaderboard</li>
+                    </ul>
+
+                    <div style="font-size: 0.775rem; opacity: 0.75; border-top: 1px solid rgba(255, 255, 255, 0.2); padding-top: 0.75rem;">
+                        Secure Session Authentication • BCA Exam Portal
+                    </div>
                 </div>
-                
-                <div id="authAlert" class="alert-box" style="display:none;"></div>
 
-                <!-- LOGIN FORM -->
-                <form id="loginForm" class="auth-form-view" style="${initialTab === 'login' ? 'display:block' : 'display:none'}">
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" id="loginEmail" class="form-control" placeholder="student@quizpro.com" required />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" id="loginPass" class="form-control" placeholder="••••••••" required />
-                    </div>
-                    <div class="form-row-space">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="rememberMe" /> Remember Me
-                        </label>
-                        <a href="javascript:void(0)" onclick="AuthManager.switchTab('forgot')" class="link-text">Forgot Password?</a>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">Log In to Account</button>
-                    <button type="button" class="btn btn-outline btn-block" style="margin-top: 0.5rem;" onclick="AuthManager.continueGuest()">Continue as Guest</button>
-                </form>
+                <!-- Right Form Side -->
+                <div class="auth-form-side">
+                    <button type="button" class="modal-close-icon-btn" onclick="AuthManager.closeAuthModal()" title="Close Modal" aria-label="Close">✕</button>
 
-                <!-- SIGNUP FORM -->
-                <form id="signupForm" class="auth-form-view" style="${initialTab === 'signup' ? 'display:block' : 'display:none'}">
-                    <div class="form-group">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" id="signupName" class="form-control" placeholder="e.g. Alex Morgan" required />
+                    <!-- Modern Segmented Tabs -->
+                    <div class="auth-segmented-tabs" id="modalAuthTabs">
+                        <button type="button" class="auth-tab ${initialTab === 'login' ? 'active' : ''}" id="tabBtnLogin" onclick="AuthManager.switchTab('login')">Student Login</button>
+                        <button type="button" class="auth-tab ${initialTab === 'signup' ? 'active' : ''}" id="tabBtnSignup" onclick="AuthManager.switchTab('signup')">Sign Up</button>
+                        <button type="button" class="auth-tab ${initialTab === 'admin' ? 'active tab-admin-active' : ''}" id="tabBtnAdmin" onclick="AuthManager.switchTab('admin')">Admin</button>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Register Number</label>
-                        <input type="text" id="signupReg" class="form-control" placeholder="e.g. BCA2026042" required />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Department</label>
-                        <select id="signupDept" class="form-control" required>
-                            <option value="BCA">BCA (Bachelor of Computer Applications)</option>
-                            <option value="BSc">BSc (Computer Science / IT)</option>
-                            <option value="BCom CA">BCom CA (Computer Applications)</option>
-                            <option value="BBA">BBA (Business Administration)</option>
-                            <option value="BCom">BCom (General Commerce)</option>
-                            <option value="General">General Technical Topics</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" id="signupEmail" class="form-control" placeholder="alex@university.edu" required />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Create Password</label>
-                        <input type="password" id="signupPass" class="form-control" placeholder="At least 6 characters" required />
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">Create Student Account</button>
-                </form>
+                    
+                    <div id="authAlert" class="alert" style="display:none; margin-bottom: 1rem;"></div>
 
-                <!-- ADMIN LOGIN FORM -->
-                <form id="adminForm" class="auth-form-view" style="${initialTab === 'admin' ? 'display:block' : 'display:none'}">
-                    <div class="form-group">
-                        <label class="form-label">Admin Email</label>
-                        <input type="email" id="adminEmail" class="form-control" placeholder="admin@quizpro.com" required />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Admin Password</label>
-                        <input type="password" id="adminPass" class="form-control" placeholder="••••••••" required />
-                    </div>
-                    <button type="submit" class="btn btn-danger btn-block" style="margin-top: 1rem;">Access Admin Portal</button>
-                </form>
+                    <!-- 1. STUDENT LOGIN FORM -->
+                    <form id="loginForm" class="auth-form-view" style="${initialTab === 'login' ? 'display:block' : 'display:none'}">
+                        <div class="form-group">
+                            <label class="form-label" for="loginEmail">Email or Register Number</label>
+                            <input type="text" id="loginEmail" class="form-control" placeholder="student@quizpro.com or ID" required autocomplete="username" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="loginPass">Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="loginPass" class="form-control" placeholder="••••••••" required autocomplete="current-password" />
+                                <button type="button" class="password-toggle-btn" onclick="AuthManager.togglePasswordVisibility('loginPass', this)" title="Toggle password visibility" aria-label="Toggle password visibility">
+                                    ${this.eyeSvg}
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.75rem 0 1.25rem 0; font-size: 0.85rem;">
+                            <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; color: var(--text-secondary);">
+                                <input type="checkbox" id="rememberMe" /> Remember Me
+                            </label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <a href="javascript:void(0)" onclick="AuthManager.switchTab('forgot-email')" style="color: var(--primary-color);">Forgot Email?</a>
+                                <span style="color: var(--border-color);">|</span>
+                                <a href="javascript:void(0)" onclick="AuthManager.switchTab('forgot-password')" style="color: var(--primary-color);">Forgot Password?</a>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Log In to Account</button>
 
-                <!-- FORGOT PASSWORD FORM -->
-                <form id="forgotForm" class="auth-form-view" style="display:none">
-                    <h3>Reset Password</h3>
-                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">Enter your email address to receive a password reset link.</p>
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" id="forgotEmail" class="form-control" placeholder="yourname@domain.com" required />
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Send Reset Link</button>
-                    <button type="button" class="btn btn-secondary btn-block" style="margin-top:0.5rem" onclick="AuthManager.switchTab('login')">Back to Login</button>
-                </form>
+                        <div style="margin-top: 0.85rem; text-align: center; font-size: 0.85rem; color: var(--text-secondary);">
+                            Don't have an account? <a href="javascript:void(0)" onclick="AuthManager.switchTab('signup')" style="color: var(--primary-color); font-weight: 700;">Create Account</a>
+                        </div>
+
+                        <div class="demo-credential-chip" onclick="AuthManager.fillDemoStudent()">
+                            ⚡ <strong>Demo Student:</strong> <code>student@quizpro.com</code> / <code>student</code> <span style="color: var(--primary-color); font-weight: 700; text-decoration: underline;">(Click to Fill)</span>
+                        </div>
+                    </form>
+
+                    <!-- 2. STUDENT SIGNUP FORM -->
+                    <form id="signupForm" class="auth-form-view" style="${initialTab === 'signup' ? 'display:block' : 'display:none'}">
+                        <div class="form-group">
+                            <label class="form-label" for="signupName">Full Name</label>
+                            <input type="text" id="signupName" class="form-control" placeholder="e.g. Alex Morgan" required autocomplete="name" />
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <div class="form-group">
+                                <label class="form-label" for="signupReg">Register No. <small style="color: var(--text-muted);">(Optional)</small></label>
+                                <input type="text" id="signupReg" class="form-control" placeholder="e.g. BCA2026042" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="signupDept">Department</label>
+                                <select id="signupDept" class="form-control" required>
+                                    <option value="BCA">BCA</option>
+                                    <option value="BSc">BSc CS/IT</option>
+                                    <option value="BCom CA">BCom CA</option>
+                                    <option value="BBA">BBA</option>
+                                    <option value="BCom">BCom</option>
+                                    <option value="General">General</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="signupEmail">Email Address</label>
+                            <input type="email" id="signupEmail" class="form-control" placeholder="alex@example.com" required autocomplete="email" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="signupPass">Create Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="signupPass" class="form-control" placeholder="Enter password" required autocomplete="new-password" />
+                                <button type="button" class="password-toggle-btn" onclick="AuthManager.togglePasswordVisibility('signupPass', this)" title="Toggle password visibility" aria-label="Toggle password visibility">
+                                    ${this.eyeSvg}
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 0.75rem;">Create Student Account</button>
+
+                        <div style="margin-top: 0.85rem; text-align: center; font-size: 0.85rem; color: var(--text-secondary);">
+                            Already have an account? <a href="javascript:void(0)" onclick="AuthManager.switchTab('login')" style="color: var(--primary-color); font-weight: 700;">Log In</a>
+                        </div>
+                    </form>
+
+                    <!-- 3. ADMIN LOGIN FORM -->
+                    <form id="adminForm" class="auth-form-view" style="${initialTab === 'admin' ? 'display:block' : 'display:none'}">
+                        <div class="form-group">
+                            <label class="form-label" for="adminEmail">Admin Username / Email</label>
+                            <input type="text" id="adminEmail" class="form-control" value="admin@quizpro.com" required autocomplete="username" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="adminPass">Admin Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="adminPass" class="form-control" value="admin" required autocomplete="current-password" />
+                                <button type="button" class="password-toggle-btn" onclick="AuthManager.togglePasswordVisibility('adminPass', this)" title="Toggle password visibility" aria-label="Toggle password visibility">
+                                    ${this.eyeSvg}
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-block" style="margin-top: 1rem;">🛡️ Access Admin Portal</button>
+                        <div style="margin-top: 1rem; text-align: center; font-size: 0.8rem; color: var(--text-secondary);">
+                            Demo Admin: <code>admin@quizpro.com</code> | <code>admin</code>
+                        </div>
+                    </form>
+
+                    <!-- 4. FORGOT EMAIL FORM -->
+                    <form id="forgotEmailForm" class="auth-form-view" style="${initialTab === 'forgot-email' ? 'display:block' : 'display:none'}">
+                        <h4 style="margin-bottom: 0.35rem;">🔍 Find Registered Email</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Enter your Register Number or Full Name.</p>
+
+                        <div class="form-group">
+                            <label class="form-label" for="forgotEmailInput">Register Number or Full Name</label>
+                            <input type="text" id="forgotEmailInput" class="form-control" placeholder="e.g. BCA202601 or Alex" required />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 0.5rem;" id="findEmailSubmitBtn">Find My Registered Email</button>
+
+                        <div id="forgotEmailResult" class="recovery-result-box" style="display: none; background: var(--bg-subtle); padding: 0.75rem; border-radius: var(--radius-md); margin-top: 0.75rem; font-size: 0.85rem;">
+                            <div>Student: <strong id="resEmailName">-</strong></div>
+                            <div>Reg No: <strong id="resEmailReg">-</strong></div>
+                            <div>Department: <strong id="resEmailDept">-</strong></div>
+                            <div style="margin-top: 0.35rem; color: var(--primary-color);">Email: <strong id="resEmailValue">-</strong></div>
+                            <button type="button" class="btn btn-primary btn-sm btn-block" style="margin-top: 0.5rem;" id="useFoundEmailBtn">Log In with This Email</button>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.85rem;">
+                            <a href="javascript:void(0)" onclick="AuthManager.switchTab('login')">← Back to Login</a>
+                            <a href="javascript:void(0)" onclick="AuthManager.switchTab('forgot-password')">Forgot Password? →</a>
+                        </div>
+                    </form>
+
+                    <!-- 5. FORGOT PASSWORD FORM -->
+                    <form id="forgotPasswordForm" class="auth-form-view" style="${initialTab === 'forgot-password' || initialTab === 'forgot' ? 'display:block' : 'display:none'}">
+                        <h4 style="margin-bottom: 0.35rem;">🔐 Reset Password</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Enter your registered email and new password.</p>
+
+                        <div class="form-group">
+                            <label class="form-label" for="forgotPassEmail">Registered Email</label>
+                            <input type="email" id="forgotPassEmail" class="form-control" placeholder="student@quizpro.com" required autocomplete="email" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="forgotPassNew">New Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="forgotPassNew" class="form-control" placeholder="Enter new password" required autocomplete="new-password" />
+                                <button type="button" class="password-toggle-btn" onclick="AuthManager.togglePasswordVisibility('forgotPassNew', this)" title="Toggle password visibility" aria-label="Toggle password visibility">
+                                    ${this.eyeSvg}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="forgotPassConfirm">Confirm New Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="forgotPassConfirm" class="form-control" placeholder="Re-type new password" required autocomplete="new-password" />
+                                <button type="button" class="password-toggle-btn" onclick="AuthManager.togglePasswordVisibility('forgotPassConfirm', this)" title="Toggle password visibility" aria-label="Toggle password visibility">
+                                    ${this.eyeSvg}
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;" id="resetPassSubmitBtn">🔄 Reset & Update Password</button>
+
+                        <div id="forgotPassResult" style="display: none; margin-top: 1rem;">
+                            <button type="button" class="btn btn-primary btn-block" id="proceedToLoginBtn">👉 Proceed to Login</button>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.85rem;">
+                            <a href="javascript:void(0)" onclick="AuthManager.switchTab('login')">← Back to Login</a>
+                            <a href="javascript:void(0)" onclick="AuthManager.switchTab('forgot-email')">Forgot Email?</a>
+                        </div>
+                    </form>
+                </div>
             </div>
         `;
 
@@ -580,27 +962,89 @@ const AuthManager = {
         this.attachModalFormListeners();
     },
 
-    switchTab: function (tab) {
+    switchTab: function (tab, prefillData = null) {
         const tabs = document.querySelectorAll('.auth-tab');
-        tabs.forEach(t => t.classList.remove('active'));
+        tabs.forEach(t => {
+            t.classList.remove('active');
+            t.classList.remove('tab-admin-active');
+        });
 
         const views = document.querySelectorAll('.auth-form-view');
         views.forEach(v => v.style.display = 'none');
 
         const alertBox = document.getElementById('authAlert');
-        if (alertBox) alertBox.style.display = 'none';
+        if (alertBox) {
+            alertBox.style.display = 'none';
+            alertBox.innerHTML = '';
+        }
+
+        const emailResult = document.getElementById('forgotEmailResult');
+        if (emailResult) emailResult.style.display = 'none';
+
+        const passResult = document.getElementById('forgotPassResult');
+        if (passResult) passResult.style.display = 'none';
 
         if (tab === 'login') {
-            if (tabs[0]) tabs[0].classList.add('active');
-            document.getElementById('loginForm').style.display = 'block';
+            const loginBtn = document.getElementById('tabBtnLogin');
+            if (loginBtn) loginBtn.classList.add('active');
+            const form = document.getElementById('loginForm');
+            if (form) form.style.display = 'block';
+
+            if (prefillData && prefillData.email) {
+                const emailInput = document.getElementById('loginEmail');
+                if (emailInput) {
+                    emailInput.value = prefillData.email;
+                    const passInput = document.getElementById('loginPass');
+                    if (passInput) passInput.focus();
+                }
+            }
         } else if (tab === 'signup') {
-            if (tabs[1]) tabs[1].classList.add('active');
-            document.getElementById('signupForm').style.display = 'block';
+            const signupBtn = document.getElementById('tabBtnSignup');
+            if (signupBtn) signupBtn.classList.add('active');
+            const form = document.getElementById('signupForm');
+            if (form) form.style.display = 'block';
+
+            if (prefillData && prefillData.email) {
+                const emailInput = document.getElementById('signupEmail');
+                if (emailInput) {
+                    emailInput.value = prefillData.email;
+                    const nameInput = document.getElementById('signupName');
+                    if (nameInput) nameInput.focus();
+                }
+            }
         } else if (tab === 'admin') {
-            if (tabs[2]) tabs[2].classList.add('active');
-            document.getElementById('adminForm').style.display = 'block';
-        } else if (tab === 'forgot') {
-            document.getElementById('forgotForm').style.display = 'block';
+            const adminBtn = document.getElementById('tabBtnAdmin');
+            if (adminBtn) {
+                adminBtn.classList.add('active');
+                adminBtn.classList.add('tab-admin-active');
+            }
+            const form = document.getElementById('adminForm');
+            if (form) form.style.display = 'block';
+        } else if (tab === 'forgot-email') {
+            const form = document.getElementById('forgotEmailForm');
+            if (form) {
+                form.style.display = 'block';
+                const input = document.getElementById('forgotEmailInput');
+                if (input) {
+                    input.value = '';
+                    input.focus();
+                }
+            }
+        } else if (tab === 'forgot-password' || tab === 'forgot') {
+            const form = document.getElementById('forgotPasswordForm');
+            if (form) {
+                form.style.display = 'block';
+                const emailInput = document.getElementById('forgotPassEmail');
+                if (emailInput) {
+                    if (prefillData && prefillData.email) {
+                        emailInput.value = prefillData.email;
+                        const passInput = document.getElementById('forgotPassNew');
+                        if (passInput) passInput.focus();
+                    } else {
+                        emailInput.focus();
+                    }
+                }
+            }
         }
     },
 
@@ -618,74 +1062,257 @@ const AuthManager = {
     },
 
     attachModalFormListeners: function () {
+        // 1. Login Form Submit
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
+            let isLoggingIn = false;
             loginForm.onsubmit = async (e) => {
                 e.preventDefault();
-                const email = document.getElementById('loginEmail').value.trim();
-                const pass = document.getElementById('loginPass').value;
-                const rem = document.getElementById('rememberMe').checked;
+                if (isLoggingIn) return;
 
-                const res = await this.login(email, pass, rem);
-                if (res.success) {
-                    this.closeAuthModal();
-                    window.location.href = 'dashboard.html';
-                } else {
-                    this.showAlert(res.error, 'danger');
+                const emailInput = document.getElementById('loginEmail');
+                const passInput = document.getElementById('loginPass');
+                const remInput = document.getElementById('rememberMe');
+                const submitBtn = loginForm.querySelector('button[type="submit"]');
+
+                const email = emailInput ? emailInput.value.trim() : '';
+                const pass = passInput ? passInput.value : '';
+                const rem = remInput ? remInput.checked : false;
+
+                if (!email || !pass) {
+                    this.showAlert('Please enter both your email / register number and password.', 'danger');
+                    return;
+                }
+
+                isLoggingIn = true;
+                const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Log In to Account';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span>⏳ Logging in...</span>';
+                }
+
+                try {
+                    const res = await this.login(email, pass, rem);
+                    if (res && res.success) {
+                        this.showAlert('✅ Login successful! Redirecting...', 'success');
+                        setTimeout(() => {
+                            this.closeAuthModal();
+                            if (res.user && (res.user.role === 'admin' || res.user.isAdmin === true)) {
+                                window.location.href = 'admin-dashboard.html';
+                            } else {
+                                window.location.href = 'dashboard.html';
+                            }
+                        }, 350);
+                    } else {
+                        const errMsg = (res && res.error) ? res.error : 'Incorrect password entered.';
+                        this.showAlert(errMsg, 'danger');
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnText;
+                        }
+                        isLoggingIn = false;
+                    }
+                } catch (err) {
+                    console.error('Login submit error:', err);
+                    this.showAlert('An unexpected error occurred during login. Please try again.', 'danger');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
+                    isLoggingIn = false;
                 }
             };
         }
 
+        // 2. Signup Form Submit
         const signupForm = document.getElementById('signupForm');
         if (signupForm) {
+            let isRegistering = false;
             signupForm.onsubmit = async (e) => {
                 e.preventDefault();
+                if (isRegistering) return;
+
+                const nameInput = document.getElementById('signupName');
+                const regInput = document.getElementById('signupReg');
+                const deptInput = document.getElementById('signupDept');
+                const emailInput = document.getElementById('signupEmail');
+                const passInput = document.getElementById('signupPass');
+                const submitBtn = signupForm.querySelector('button[type="submit"]');
+
                 const data = {
-                    name: document.getElementById('signupName').value.trim(),
-                    regNumber: document.getElementById('signupReg').value.trim(),
-                    department: document.getElementById('signupDept').value,
-                    email: document.getElementById('signupEmail').value.trim(),
-                    password: document.getElementById('signupPass').value,
+                    name: nameInput ? nameInput.value.trim() : '',
+                    regNumber: regInput ? regInput.value.trim() : '',
+                    department: deptInput ? deptInput.value : 'BCA',
+                    email: emailInput ? emailInput.value.trim() : '',
+                    password: passInput ? passInput.value : '',
                     role: 'student'
                 };
-                const res = await this.register(data);
-                if (res.success) {
-                    this.closeAuthModal();
-                    window.location.href = 'dashboard.html';
-                } else {
-                    this.showAlert(res.error, 'danger');
+
+                if (!data.name || !data.email || !data.password) {
+                    this.showAlert('Please fill in all required fields.', 'danger');
+                    return;
+                }
+
+                isRegistering = true;
+                const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Create Student Account';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span>⏳ Creating Account...</span>';
+                }
+
+                try {
+                    const res = await this.register(data);
+                    if (res && res.success) {
+                        this.showAlert('✅ Account created successfully! Redirecting...', 'success');
+                        setTimeout(() => {
+                            this.closeAuthModal();
+                            window.location.href = 'dashboard.html';
+                        }, 350);
+                    } else {
+                        this.showAlert(res.error || 'Failed to create account.', 'danger');
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnText;
+                        }
+                        isRegistering = false;
+                    }
+                } catch (err) {
+                    console.error('Registration submit error:', err);
+                    this.showAlert('An error occurred during registration. Please try again.', 'danger');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
+                    isRegistering = false;
                 }
             };
         }
 
+        // 3. Admin Form Submit
         const adminForm = document.getElementById('adminForm');
         if (adminForm) {
+            let isAdminLoggingIn = false;
             adminForm.onsubmit = async (e) => {
                 e.preventDefault();
-                const email = document.getElementById('adminEmail').value.trim();
-                const pass = document.getElementById('adminPass').value;
-                const res = await this.login(email, pass, false);
-                if (res.success && (res.user.role === 'admin' || email.includes('admin'))) {
-                    res.user.role = 'admin';
-                    StorageHelper.saveUser(res.user);
-                    this.closeAuthModal();
-                    window.location.href = 'admin-dashboard.html';
-                } else {
-                    this.showAlert('Invalid admin credentials', 'danger');
+                if (isAdminLoggingIn) return;
+
+                const emailInput = document.getElementById('adminEmail');
+                const passInput = document.getElementById('adminPass');
+                const submitBtn = adminForm.querySelector('button[type="submit"]');
+                const email = emailInput && emailInput.value ? emailInput.value.trim() : 'admin@quizpro.com';
+                const pass = passInput && passInput.value ? passInput.value.trim() : '';
+
+                isAdminLoggingIn = true;
+                const originalBtnText = submitBtn ? submitBtn.innerHTML : '🛡️ Access Admin Portal';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span>⏳ Authenticating...</span>';
+                }
+
+                try {
+                    const res = await this.login(email, pass);
+                    if (res.success && (res.user.role === 'admin' || res.user.isAdmin === true)) {
+                        this.showAlert('✅ Admin authenticated! Redirecting...', 'success');
+                        setTimeout(() => {
+                            this.closeAuthModal();
+                            window.location.href = 'admin-dashboard.html';
+                        }, 350);
+                    } else if (res.success) {
+                        this.showAlert('This account does not have administrator privileges.', 'danger');
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnText;
+                        }
+                        isAdminLoggingIn = false;
+                    } else {
+                        this.showAlert(res.error || 'Invalid administrator username or password.', 'danger');
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnText;
+                        }
+                        isAdminLoggingIn = false;
+                    }
+                } catch (err) {
+                    console.error('Admin login error:', err);
+                    this.showAlert('An error occurred during authentication.', 'danger');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
+                    isAdminLoggingIn = false;
                 }
             };
         }
 
-        const forgotForm = document.getElementById('forgotForm');
-        if (forgotForm) {
-            forgotForm.onsubmit = async (e) => {
+        // 4. Forgot Email Form Submit
+        const forgotEmailForm = document.getElementById('forgotEmailForm');
+        if (forgotEmailForm) {
+            forgotEmailForm.onsubmit = async (e) => {
                 e.preventDefault();
-                const email = document.getElementById('forgotEmail').value.trim();
-                const res = await this.forgotPassword(email);
+                const identifier = document.getElementById('forgotEmailInput').value.trim();
+                const res = await this.forgotEmail(identifier);
+                
+                const resultCard = document.getElementById('forgotEmailResult');
                 if (res.success) {
                     this.showAlert(res.message, 'success');
+                    if (resultCard) {
+                        document.getElementById('resEmailName').innerText = res.name || '-';
+                        document.getElementById('resEmailReg').innerText = res.regNumber || '-';
+                        document.getElementById('resEmailDept').innerText = res.department || '-';
+                        document.getElementById('resEmailValue').innerText = res.email || '-';
+                        resultCard.style.display = 'block';
+
+                        // Hook up 1-click button to use this email for login
+                        const useEmailBtn = document.getElementById('useFoundEmailBtn');
+                        if (useEmailBtn) {
+                            useEmailBtn.onclick = () => {
+                                this.switchTab('login', { email: res.email });
+                            };
+                        }
+                    }
                 } else {
-                    this.showAlert(res.error, 'danger');
+                    if (resultCard) resultCard.style.display = 'none';
+                    this.showAlert(res.error || 'No matching account found.', 'danger');
+                }
+            };
+        }
+
+        // 5. Forgot Password Form Submit
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        if (forgotPasswordForm) {
+            forgotPasswordForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('forgotPassEmail').value.trim();
+                const newPass = document.getElementById('forgotPassNew').value;
+                const confirmPass = document.getElementById('forgotPassConfirm').value;
+
+                if (newPass !== confirmPass) {
+                    this.showAlert('Passwords do not match. Please re-enter identical passwords.', 'danger');
+                    return;
+                }
+
+                if (newPass.length < 6) {
+                    this.showAlert('Password must be at least 6 characters long.', 'danger');
+                    return;
+                }
+
+                // Verify and reset
+                const res = await this.resetPassword(email, newPass);
+                const passResult = document.getElementById('forgotPassResult');
+                if (res.success) {
+                    this.showAlert(res.message, 'success');
+                    if (passResult) {
+                        passResult.style.display = 'block';
+                        const proceedBtn = document.getElementById('proceedToLoginBtn');
+                        if (proceedBtn) {
+                            proceedBtn.onclick = () => {
+                                this.switchTab('login', { email: email });
+                            };
+                        }
+                    }
+                } else {
+                    if (passResult) passResult.style.display = 'none';
+                    this.showAlert(res.error || 'Failed to reset password. Please check your email address.', 'danger');
                 }
             };
         }
@@ -694,8 +1321,8 @@ const AuthManager = {
     showAlert: function (msg, type = 'info') {
         const box = document.getElementById('authAlert');
         if (box) {
-            box.className = `alert-box alert-${type}`;
-            box.innerText = msg;
+            box.className = `alert alert-${type}`;
+            box.innerHTML = msg;
             box.style.display = 'block';
         }
     }
@@ -773,22 +1400,9 @@ const AdminAuth = {
     isLoggedIn: function () {
         return AuthManager.isAdmin();
     },
-    login: function (username, password) {
-        if ((username === 'admin' || username === 'admin@quizpro.com') && (password === 'password123' || password === 'admin')) {
-            const adminUser = {
-                id: 'usr_admin',
-                name: 'System Admin',
-                regNumber: 'ADMIN001',
-                department: 'BCA',
-                email: 'admin@quizpro.com',
-                role: 'admin',
-                isAdmin: true
-            };
-            StorageHelper.saveUser(adminUser);
-            AuthManager.updateUI();
-            return true;
-        }
-        return false;
+    login: async function (username, password) {
+        const res = await AuthManager.login(username, password);
+        return res.success && (res.user.role === 'admin' || res.user.isAdmin);
     },
     logout: function () {
         AuthManager.logout(true);
